@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { DM_Sans } from 'next/font/google';
+
+import { Header } from '@/components/layout/Header';
 import './globals.css';
 
 const dmSans = DM_Sans({
@@ -17,6 +20,24 @@ export const metadata: Metadata = {
     'Discover useful gadgets, clever home products, kitchen finds, and interesting products worth knowing about.'
 };
 
+const themeScript = `
+(function () {
+  try {
+    const storedTheme = localStorage.getItem("daily-finds-theme");
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+
+    const theme =
+      storedTheme || (systemPrefersDark ? "dark" : "light");
+
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+  } catch {}
+})();
+`;
+
 export default function RootLayout({
   children
 }: Readonly<{
@@ -24,7 +45,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={dmSans.variable}>{children}</body>
+      <head>
+        <Script id="theme-script" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
+      </head>
+      <body className={dmSans.variable}>
+        <Header />
+        {children}
+      </body>
     </html>
   );
 }
