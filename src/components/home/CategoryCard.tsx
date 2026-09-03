@@ -1,7 +1,14 @@
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
-import type { Category } from '@/types/category';
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  image: string;
+  isFeatured?: boolean;
+};
 
 interface CategoryCardProps {
   category: Category;
@@ -22,7 +29,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
       <div className="relative flex h-full min-h-[220px] flex-col justify-between p-5 sm:min-h-[260px] sm:p-6">
         <div className="flex items-start justify-between">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
-            {category.id}
+            {category.slug}
           </span>
 
           <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] opacity-70 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:opacity-100">
@@ -36,7 +43,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
           </h3>
 
           <p className="mt-2 max-w-xs text-sm leading-6 text-[var(--text-secondary)]">
-            {category.description}
+            {category.description ?? 'Useful products worth discovering.'}
           </p>
         </div>
       </div>

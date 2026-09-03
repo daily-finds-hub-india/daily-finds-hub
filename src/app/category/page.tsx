@@ -1,17 +1,20 @@
-import { Container } from '@/components/layout/Container';
 import { CategoryCard } from '@/components/home/CategoryCard';
+import { Container } from '@/components/layout/Container';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { prisma } from '@/lib/prisma';
 
-import { categories } from '@/data/categories';
+export default async function CategoriesPage() {
+  const categories = await prisma.category.findMany({
+    orderBy: { name: 'asc' }
+  });
 
-export default function CategoriesPage() {
   return (
     <main>
       <Section>
         <Container>
           <SectionHeading
-            eyebrow="Browse the collection"
+            eyebrow="Browse by interest"
             title="Explore categories."
             description="Start with a category and discover useful gadgets, clever products, and interesting everyday finds."
           />

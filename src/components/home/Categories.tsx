@@ -6,10 +6,25 @@ import { CategoryCard } from '@/components/home/CategoryCard';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
-import { categories } from '@/data/categories';
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  image: string;
+  isFeatured: boolean;
+};
 
-export function Categories() {
+interface CategoriesProps {
+  categories: Category[];
+}
+
+export function Categories({ categories }: CategoriesProps) {
   const featuredCategories = categories.slice(0, 3);
+
+  if (featuredCategories.length === 0) {
+    return null;
+  }
 
   return (
     <Section className="border-t border-[var(--border)]">

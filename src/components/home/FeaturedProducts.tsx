@@ -6,12 +6,30 @@ import { ProductCard } from '@/components/products/ProductCard';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
-import { products } from '@/data/products';
+type Product = {
+  id: string;
+  name: string;
+  slug: string;
+  shortDescription: string;
+  description: string;
+  categoryId: string;
+  price: unknown;
+  originalPrice: unknown;
+  rating: unknown;
+  reviewCount: number;
+  amazonUrl: string | null;
+  asin: string | null;
+  isFeatured: boolean;
+  isTrending: boolean;
+  isPublished: boolean;
+};
 
-export function FeaturedProducts() {
-  const featuredProducts = products
-    .filter((product) => product.featured)
-    .slice(0, 3);
+interface FeaturedProductsProps {
+  products: Product[];
+}
+
+export function FeaturedProducts({ products }: FeaturedProductsProps) {
+  const featuredProducts = products.slice(0, 3);
 
   if (featuredProducts.length === 0) {
     return null;

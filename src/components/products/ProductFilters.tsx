@@ -2,16 +2,16 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { categories } from '@/data/categories';
 import { Select } from '@/components/ui/Select';
 
-const filterCategories = [
-  { id: 'all', name: 'All' },
-  ...categories.map((category) => ({
-    id: category.id,
-    name: category.name
-  }))
-];
+type Category = {
+  id: string;
+  name: string;
+};
+
+interface ProductFiltersProps {
+  categories: Category[];
+}
 
 const sortOptions = [
   { value: 'featured', label: 'Featured' },
@@ -20,12 +20,14 @@ const sortOptions = [
   { value: 'rating', label: 'Top rated' }
 ];
 
-export function ProductFilters() {
+export function ProductFilters({ categories }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const activeCategory = searchParams.get('category') ?? 'all';
   const activeSort = searchParams.get('sort') ?? 'featured';
+
+  const filterCategories = [{ id: 'all', name: 'All' }, ...categories];
 
   function updateFilter(key: 'category' | 'sort', value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -46,7 +48,6 @@ export function ProductFilters() {
   return (
     <div className="mb-12 border-y border-[var(--border)] py-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        {/* Categories */}
         <div
           className="themed-scrollbar flex gap-2 overflow-x-auto pb-1 lg:pb-0"
           role="group"
@@ -73,7 +74,6 @@ export function ProductFilters() {
           })}
         </div>
 
-        {/* Sort */}
         <div className="flex shrink-0 items-center">
           <Select
             label="Sort"

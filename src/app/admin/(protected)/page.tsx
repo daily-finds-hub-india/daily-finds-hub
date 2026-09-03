@@ -1,4 +1,18 @@
-export default function AdminPage() {
+import { prisma } from '@/lib/prisma';
+
+export default async function AdminPage() {
+  const [productCount, categoryCount, publishedCount] = await Promise.all([
+    prisma.product.count(),
+
+    prisma.category.count(),
+
+    prisma.product.count({
+      where: {
+        isPublished: true
+      }
+    })
+  ]);
+
   return (
     <div className="mx-auto max-w-7xl">
       <div className="mb-8">
@@ -18,22 +32,25 @@ export default function AdminPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="border border-[var(--border)] bg-[var(--surface)] p-6">
           <p className="text-sm text-[var(--text-muted)]">Products</p>
+
           <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
-            0
+            {productCount}
           </p>
         </div>
 
         <div className="border border-[var(--border)] bg-[var(--surface)] p-6">
           <p className="text-sm text-[var(--text-muted)]">Categories</p>
+
           <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
-            0
+            {categoryCount}
           </p>
         </div>
 
         <div className="border border-[var(--border)] bg-[var(--surface)] p-6">
           <p className="text-sm text-[var(--text-muted)]">Published</p>
+
           <p className="mt-2 text-3xl font-semibold text-[var(--text-primary)]">
-            0
+            {publishedCount}
           </p>
         </div>
       </div>

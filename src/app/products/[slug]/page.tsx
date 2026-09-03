@@ -3,8 +3,7 @@ import { notFound } from 'next/navigation';
 import { Container } from '@/components/layout/Container';
 import { ProductDetails } from '@/components/products/ProductDetails';
 import { Section } from '@/components/ui/Section';
-
-import { products } from '@/data/products';
+import { prisma } from '@/lib/prisma';
 
 interface ProductPageProps {
   params: Promise<{
@@ -15,17 +14,39 @@ interface ProductPageProps {
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
 
-  const product = products.find((item) => item.slug === slug);
+  const product = await prisma.product.findUnique({
+    where: {
+      slug
+    }
+  });
 
-  if (!product) {
+  if (!product || !product.isPublished) {
     notFound();
   }
+
+  const serializedProduct = {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    shortDescription: product.shortDescription,
+    description: product.description,
+    categoryId: product.categoryId,
+    price: product.price?.toString() ?? null,
+    originalPrice: product.originalPrice?.toString() ?? null,
+    rating: product.rating?.toString() ?? null,
+    reviewCount: product.reviewCount,
+    amazonUrl: product.amazonUrl,
+    asin: product.asin,
+    isFeatured: product.isFeatured,
+    isTrending: product.isTrending,
+    isPublished: product.isPublished
+  };
 
   return (
     <main>
       <Section>
         <Container>
-          <ProductDetails product={product} />
+          <ProductDetails product={serializedProduct} />
         </Container>
       </Section>
     </main>

@@ -1,33 +1,61 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
-import type { Product } from '@/types/product';
+type DatabaseProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  shortDescription: string;
+  description: string;
+  price: unknown;
+  originalPrice: unknown;
+  rating: unknown;
+  reviewCount: number;
+  amazonUrl: string | null;
+  asin: string | null;
+  isFeatured: boolean;
+  isTrending: boolean;
+  isPublished: boolean;
+};
+
+type LegacyProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  image: string;
+  price?: {
+    amount: number;
+  };
+  featured?: boolean;
+  trending?: boolean;
+};
+
+export type Product = DatabaseProduct | LegacyProduct;
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const isDatabaseProduct = 'shortDescription' in product;
+  const description = isDatabaseProduct
+    ? product.shortDescription
+    : product.description;
+  const isTrending = isDatabaseProduct ? product.isTrending : product.trending;
+  const price = isDatabaseProduct
+    ? product.price
+    : (product.price?.amount ?? null);
+
   return (
     <article className="group">
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-muted)]">
-          {product.image ? (
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-1/2 w-1/2 border border-[var(--border-strong)] bg-[var(--surface)] transition-transform duration-500 group-hover:scale-105" />
-            </div>
-          )}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-1/2 w-1/2 border border-[var(--border-strong)] bg-[var(--surface)] transition-transform duration-500 group-hover:scale-105" />
+          </div>
 
-          {product.trending && (
+          {isTrending && (
             <span className="absolute left-4 top-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
               Trending
             </span>
@@ -46,13 +74,13 @@ export function ProductCard({ product }: ProductCardProps) {
               </h3>
 
               <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]">
-                {product.description}
+                {description}
               </p>
             </div>
 
-            {product.price && (
+            {price !== null && price !== undefined && (
               <span className="shrink-0 text-sm font-medium text-[var(--text-primary)]">
-                ₹{product.price.amount.toLocaleString('en-IN')}
+                ₹{Number(price).toLocaleString('en-IN')}
               </span>
             )}
           </div>

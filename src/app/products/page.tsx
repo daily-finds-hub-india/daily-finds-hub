@@ -3,10 +3,7 @@ import { ProductFilters } from '@/components/products/ProductFilters';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-
-import { categories } from '@/data/categories';
-import { products } from '@/data/products';
-import type { ProductCategory } from '@/types/product';
+import { prisma } from '@/lib/prisma';
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -20,40 +17,38 @@ export default async function ProductsPage({
 }: ProductsPageProps) {
   const params = await searchParams;
 
-  const category = params.category;
-  const sort = params.sort ?? 'featured';
+  const [categories, selectedCategory] = await Promise.all([
+    prisma.category.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true }
+    }),
+    params.category
+      ? prisma.category.findUnique({
+          where: { id: params.category },
+          select: { id: true }
+        })
+      : null
+  ]);
 
-  let filteredProducts = [...products];
+  const sortOrder =
+    params.sort === 'price-low'
+      ? { price: 'asc' as const }
+      : params.sort === 'price-high'
+        ? { price: 'desc' as const }
+        : params.sort === 'rating'
+          ? { rating: 'desc' as const }
+          : { isFeatured: 'desc' as const };
 
-  if (category && categories.some((item) => item.id === category)) {
-    filteredProducts = filteredProducts.filter(
-      (product) => product.category === (category as ProductCategory)
-    );
-  }
-
-  switch (sort) {
-    case 'price-low':
-      filteredProducts.sort(
-        (a, b) => (a.price?.amount ?? Infinity) - (b.price?.amount ?? Infinity)
-      );
-      break;
-
-    case 'price-high':
-      filteredProducts.sort(
-        (a, b) =>
-          (b.price?.amount ?? -Infinity) - (a.price?.amount ?? -Infinity)
-      );
-      break;
-
-    case 'rating':
-      filteredProducts.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-      break;
-
-    case 'featured':
-    default:
-      filteredProducts.sort((a, b) => Number(b.featured) - Number(a.featured));
-      break;
-  }
+  const products = await prisma.product.findMany({
+    where: {
+      isPublished: true,
+      ...(selectedCategory ? { categoryId: selectedCategory.id } : {})
+    },
+    orderBy: sortOrder,
+    include: {
+      _count: { select: { images: true } }
+    }
+  });
 
   return (
     <main>
@@ -66,8 +61,8 @@ export default async function ProductsPage({
           />
 
           <div className="mt-14">
-            <ProductFilters />
-            <ProductGrid products={filteredProducts} />
+            <ProductFilters categories={categories} />
+            <ProductGrid products={products} />
           </div>
         </Container>
       </Section>

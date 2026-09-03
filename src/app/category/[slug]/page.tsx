@@ -4,9 +4,7 @@ import { Container } from '@/components/layout/Container';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-
-import { categories } from '@/data/categories';
-import { products } from '@/data/products';
+import { prisma } from '@/lib/prisma';
 
 interface CategoryPageProps {
   params: Promise<{
@@ -17,15 +15,22 @@ interface CategoryPageProps {
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
 
-  const category = categories.find((item) => item.slug === slug);
+  const category = await prisma.category.findUnique({
+    where: { slug },
+    include: {
+      products: {
+        where: { isPublished: true },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: { select: { images: true } }
+        }
+      }
+    }
+  });
 
   if (!category) {
     notFound();
   }
-
-  const categoryProducts = products.filter(
-    (product) => product.category === category.id
-  );
 
   return (
     <main>
@@ -34,12 +39,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           <SectionHeading
             eyebrow="Category"
             title={category.name}
-            description={category.description}
+            description={category.description ?? ''}
           />
 
           <div className="mt-14">
             <ProductGrid
-              products={categoryProducts}
+              products={category.products}
               emptyMessage="We're still discovering finds for this category."
             />
           </div>

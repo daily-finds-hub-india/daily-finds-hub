@@ -1,8 +1,23 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight, Star } from 'lucide-react';
 
-import type { Product } from '@/types/product';
+type Product = {
+  id: string;
+  name: string;
+  slug: string;
+  shortDescription: string;
+  description: string;
+  categoryId: string;
+  price: string | null;
+  originalPrice: string | null;
+  rating: string | null;
+  reviewCount: number;
+  amazonUrl: string | null;
+  asin: string | null;
+  isFeatured: boolean;
+  isTrending: boolean;
+  isPublished: boolean;
+};
 
 interface ProductDetailsProps {
   product: Product;
@@ -11,31 +26,18 @@ interface ProductDetailsProps {
 export function ProductDetails({ product }: ProductDetailsProps) {
   return (
     <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-24">
-      {/* Product visual */}
       <div className="relative aspect-square overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-muted)]">
-        {product.image ? (
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-[48%] w-[48%] border border-[var(--border-strong)] bg-[var(--surface)] shadow-[0_24px_60px_rgba(0,0,0,0.12)]" />
-          </div>
-        )}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="h-[48%] w-[48%] border border-[var(--border-strong)] bg-[var(--surface)] shadow-[0_24px_60px_rgba(0,0,0,0.12)]" />
+        </div>
 
-        {product.trending && (
+        {product.isTrending && (
           <span className="absolute left-5 top-5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
             Trending
           </span>
         )}
       </div>
 
-      {/* Product information */}
       <div className="flex flex-col justify-center">
         <Link
           href="/products"
@@ -50,7 +52,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         </Link>
 
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
-          {product.category}
+          Product
         </p>
 
         <h1 className="mt-4 text-[clamp(2.5rem,5vw,5rem)] font-semibold leading-[0.95] tracking-[-0.05em] text-[var(--text-primary)]">
@@ -62,13 +64,19 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 border-y border-[var(--border)] py-5">
-          {product.price && (
+          {product.price !== null && (
             <span className="text-2xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
-              ₹{product.price.amount.toLocaleString('en-IN')}
+              ₹{Number(product.price).toLocaleString('en-IN')}
             </span>
           )}
 
-          {product.rating && (
+          {product.originalPrice !== null && (
+            <span className="text-sm text-[var(--text-muted)] line-through">
+              ₹{Number(product.originalPrice).toLocaleString('en-IN')}
+            </span>
+          )}
+
+          {product.rating !== null && (
             <div className="flex items-center gap-2 text-sm">
               <Star size={15} fill="currentColor" strokeWidth={1.5} />
 
@@ -76,7 +84,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 {product.rating}
               </span>
 
-              {product.reviewCount && (
+              {product.reviewCount > 0 && (
                 <span className="text-[var(--text-muted)]">
                   ({product.reviewCount.toLocaleString('en-IN')})
                 </span>
@@ -102,7 +110,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </a>
           ) : (
             <p className="text-sm text-[var(--text-muted)]">
-              Amazon link will be added when this product is published.
+              Amazon link will be added when this product is ready.
             </p>
           )}
         </div>

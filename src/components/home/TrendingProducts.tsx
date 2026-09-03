@@ -6,12 +6,30 @@ import { ProductCard } from '@/components/products/ProductCard';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 
-import { products } from '@/data/products';
+type Product = {
+  id: string;
+  name: string;
+  slug: string;
+  shortDescription: string;
+  description: string;
+  categoryId: string;
+  price: unknown;
+  originalPrice: unknown;
+  rating: unknown;
+  reviewCount: number;
+  amazonUrl: string | null;
+  asin: string | null;
+  isFeatured: boolean;
+  isTrending: boolean;
+  isPublished: boolean;
+};
 
-export function TrendingProducts() {
-  const trendingProducts = products
-    .filter((product) => product.trending)
-    .slice(0, 4);
+interface TrendingProductsProps {
+  products: Product[];
+}
+
+export function TrendingProducts({ products }: TrendingProductsProps) {
+  const trendingProducts = products.slice(0, 4);
 
   if (trendingProducts.length === 0) {
     return null;
