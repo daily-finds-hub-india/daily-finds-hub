@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Menu, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Menu } from 'lucide-react';
 import Link from 'next/link';
 
 import { Container } from '@/components/layout/Container';
+import { HeaderSearch } from '@/components/search/HeaderSearch';
 import { MobileMenu } from '@/components/layout/MobileMenu';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { IconButton } from '@/components/ui/IconButton';
@@ -19,8 +20,8 @@ const navigation = [
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   useEffect(() => {
     function handleScroll() {
@@ -35,6 +36,15 @@ export function Header() {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  function openSearch() {
+    setMenuOpen(false);
+    setSearchOpen(true);
+  }
+
+  function closeSearch() {
+    setSearchOpen(false);
+  }
 
   return (
     <>
@@ -77,9 +87,11 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-1">
-            <IconButton label="Search">
-              <Search size={18} strokeWidth={1.8} />
-            </IconButton>
+            <HeaderSearch
+              isOpen={searchOpen}
+              onOpen={openSearch}
+              onClose={closeSearch}
+            />
 
             <div className="hidden sm:block">
               <ThemeToggle />
@@ -97,7 +109,7 @@ export function Header() {
         </Container>
       </header>
 
-      <MobileMenu isOpen={menuOpen} onClose={closeMenu} />
+      <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
   );
 }
