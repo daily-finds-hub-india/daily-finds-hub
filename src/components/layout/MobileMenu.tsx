@@ -81,14 +81,14 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               <Link
                 href={item.href}
                 onClick={onClose}
-                className="group flex min-h-14 items-center justify-between border-b border-[var(--border)] py-3 text-[1.35rem] font-medium leading-tight tracking-[-0.025em] text-[var(--text-primary)] transition-colors duration-200 hover:text-[var(--accent)]"
+                className="group flex min-h-12 items-center justify-between border-b border-[var(--border)] py-3 text-sm font-medium leading-tight text-[var(--text-primary)] transition-colors duration-200 hover:text-[var(--accent)]"
               >
                 <span>{item.label}</span>
 
                 <ArrowUpRight
-                  size={19}
+                  size={16}
                   strokeWidth={1.7}
-                  className="opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
+                  className="opacity-0 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:opacity-100"
                   aria-hidden="true"
                 />
               </Link>
@@ -98,7 +98,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
         <div className="mt-7 flex items-center justify-between py-5">
           <div>
-            <p className="text-base font-medium tracking-tight text-[var(--text-primary)]">
+            <p className="text-sm font-medium tracking-tight text-[var(--text-primary)]">
               Appearance
             </p>
 
