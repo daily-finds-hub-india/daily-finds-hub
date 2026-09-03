@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
 :root {
+  color-scheme: light;
+
   --background: #f7f6f2;
   --foreground: #171717;
 
@@ -27,6 +29,8 @@
 }
 
 .dark {
+  color-scheme: dark;
+
   --background: #121212;
   --foreground: #f4f2ec;
 
@@ -92,4 +96,42 @@ img {
 ::selection {
   background: var(--accent);
   color: #ffffff;
+}
+
+/* Theme-aware scrollbars */
+
+.themed-scrollbar {
+  scrollbar-color: var(--border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.themed-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Theme-aware native form controls */
+
+.themed-select {
+  color-scheme: inherit;
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
+.themed-select option {
+  background-color: var(--surface);
+  color: var(--text-primary);
 }

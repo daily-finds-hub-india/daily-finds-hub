@@ -81,5 +81,69 @@ export const products: Product[] = [
     },
     rating: 4.5,
     reviewCount: 3210
+  },
+  {
+    id: 'dummy-006',
+    slug: 'magnetic-wireless-charger',
+    name: 'Magnetic Wireless Charger',
+    description:
+      'A compact charging stand that keeps your phone powered and ready on your desk.',
+    category: 'tech',
+    image: '/images/products/magnetic-wireless-charger.webp',
+    price: {
+      amount: 1299,
+      currency: 'INR'
+    },
+    rating: 4.4,
+    reviewCount: 742,
+    featured: true
+  },
+  {
+    id: 'dummy-007',
+    slug: 'adjustable-laptop-stand',
+    name: 'Adjustable Laptop Stand',
+    description:
+      'An angled aluminium stand for a cleaner, more comfortable workspace setup.',
+    category: 'desk',
+    image: '/images/products/adjustable-laptop-stand.webp',
+    price: {
+      amount: 1099,
+      currency: 'INR'
+    },
+    rating: 4.6,
+    reviewCount: 1186,
+    trending: true
+  },
+  {
+    id: 'dummy-008',
+    slug: 'compact-travel-organizer',
+    name: 'Compact Travel Organizer',
+    description:
+      'A practical organizer for keeping chargers, cables, and small essentials together.',
+    category: 'travel',
+    image: '/images/products/compact-travel-organizer.webp',
+    price: {
+      amount: 749,
+      currency: 'INR'
+    },
+    rating: 4.3,
+    reviewCount: 536
+  },
+  {
+    id: 'dummy-009',
+    slug: 'reusable-insulated-bottle',
+    name: 'Reusable Insulated Bottle',
+    description:
+      'A sturdy everyday bottle that keeps drinks cool through commutes and long days.',
+    category: 'lifestyle',
+    image: '/images/products/reusable-insulated-bottle.webp',
+    price: {
+      amount: 899,
+      currency: 'INR'
+    },
+    rating: 4.5,
+    reviewCount: 924,
+    featured: true,
+    trending: true
   }
 ];
