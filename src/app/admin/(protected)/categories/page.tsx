@@ -1,3 +1,5 @@
+import { CategoryManager } from '@/components/admin/categories/CategoryManager';
+
 export default function AdminCategoriesPage() {
   return (
     <div className="mx-auto max-w-7xl">
@@ -15,11 +17,7 @@ export default function AdminCategoriesPage() {
         </p>
       </div>
 
-      <div className="border border-[var(--border)] bg-[var(--surface)] p-8">
-        <p className="text-sm text-[var(--text-secondary)]">
-          Category management will be available here.
-        </p>
-      </div>
+      <CategoryManager />
     </div>
   );
 }
