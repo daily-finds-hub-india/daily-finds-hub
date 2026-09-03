@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Category {
+  id           String  @id @default(cuid())
+  name         String
+  slug         String  @unique
+  description  String?
+  image        String?
+  isFeatured   Boolean @default(false)
+  displayOrder Int     @default(0)
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id               String @id @default(cuid())
+  name             String
+  slug             String @unique
+  shortDescription String
+  description      String
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  price         Decimal  @db.Decimal(10, 2)
+  originalPrice Decimal? @db.Decimal(10, 2)
+
+  rating      Decimal? @db.Decimal(2, 1)
+  reviewCount Int      @default(0)
+
+  amazonUrl String
+  asin      String?
+
+  isFeatured  Boolean @default(false)
+  isTrending  Boolean @default(false)
+  isPublished Boolean @default(false)
+
+  images ProductImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([isPublished])
+  @@index([isFeatured])
+  @@index([isTrending])
+  @@index([rating])
+  @@index([createdAt])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  url          String
+  altText      String?
+  displayOrder Int     @default(0)
+  isPrimary    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
