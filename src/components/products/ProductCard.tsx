@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -12,9 +13,19 @@ export function ProductCard({ product }: ProductCardProps) {
     <article className="group">
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-muted)]">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-1/2 w-1/2 border border-[var(--border-strong)] bg-[var(--surface)] transition-transform duration-500 group-hover:scale-105" />
-          </div>
+          {product.image ? (
+            <Image
+              src={product.image}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-1/2 w-1/2 border border-[var(--border-strong)] bg-[var(--surface)] transition-transform duration-500 group-hover:scale-105" />
+            </div>
+          )}
 
           {product.trending && (
             <span className="absolute left-4 top-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">

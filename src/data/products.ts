@@ -8,7 +8,7 @@ export const products: Product[] = [
     description:
       'A compact kitchen helper for chopping vegetables, herbs, and everyday ingredients.',
     category: 'kitchen',
-    image: '/images/products/mini-electric-chopper.webp',
+    image: '',
     price: {
       amount: 899,
       currency: 'INR'
@@ -25,7 +25,7 @@ export const products: Product[] = [
     description:
       'Seal and cut opened food packets to keep everyday snacks and ingredients fresh.',
     category: 'kitchen',
-    image: '/images/products/food-bag-sealer.webp',
+    image: '',
     price: {
       amount: 599,
       currency: 'INR'
@@ -41,7 +41,7 @@ export const products: Product[] = [
     description:
       'A simple countdown timer for cooking, baking, study sessions, and everyday tasks.',
     category: 'kitchen',
-    image: '/images/products/digital-kitchen-timer.webp',
+    image: '',
     price: {
       amount: 399,
       currency: 'INR'
@@ -58,7 +58,7 @@ export const products: Product[] = [
     description:
       'A flameless rechargeable lighter designed for convenient everyday kitchen use.',
     category: 'home',
-    image: '/images/products/electric-lighter.webp',
+    image: '',
     price: {
       amount: 499,
       currency: 'INR'
@@ -74,7 +74,7 @@ export const products: Product[] = [
     description:
       'A compact precision scale for weighing ingredients while cooking and baking.',
     category: 'kitchen',
-    image: '/images/products/kitchen-scale.webp',
+    image: '',
     price: {
       amount: 699,
       currency: 'INR'
@@ -89,7 +89,7 @@ export const products: Product[] = [
     description:
       'A compact charging stand that keeps your phone powered and ready on your desk.',
     category: 'tech',
-    image: '/images/products/magnetic-wireless-charger.webp',
+    image: '',
     price: {
       amount: 1299,
       currency: 'INR'
@@ -105,7 +105,7 @@ export const products: Product[] = [
     description:
       'An angled aluminium stand for a cleaner, more comfortable workspace setup.',
     category: 'desk',
-    image: '/images/products/adjustable-laptop-stand.webp',
+    image: '',
     price: {
       amount: 1099,
       currency: 'INR'
@@ -121,7 +121,7 @@ export const products: Product[] = [
     description:
       'A practical organizer for keeping chargers, cables, and small essentials together.',
     category: 'travel',
-    image: '/images/products/compact-travel-organizer.webp',
+    image: '',
     price: {
       amount: 749,
       currency: 'INR'
@@ -136,7 +136,7 @@ export const products: Product[] = [
     description:
       'A sturdy everyday bottle that keeps drinks cool through commutes and long days.',
     category: 'lifestyle',
-    image: '/images/products/reusable-insulated-bottle.webp',
+    image: '',
     price: {
       amount: 899,
       currency: 'INR'
