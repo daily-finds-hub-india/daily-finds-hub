@@ -38,7 +38,7 @@ model Product {
   rating      Decimal? @db.Decimal(2, 1)
   reviewCount Int      @default(0)
 
-  amazonUrl String
+  amazonUrl String?
   asin      String?
 
   isFeatured  Boolean @default(false)
@@ -71,4 +71,14 @@ model ProductImage {
   createdAt DateTime @default(now())
 
   @@index([productId])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  isActive     Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
