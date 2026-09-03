@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import { DM_Sans } from 'next/font/google';
 
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import { NavigationScroll } from '@/components/layout/NavigationScroll';
+import { SiteChrome } from '@/components/layout/SiteChrome';
 import './globals.css';
 
 const dmSans = DM_Sans({
@@ -48,15 +46,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <Script id="theme-script" strategy="beforeInteractive">
-          {themeScript}
-        </Script>
+        <script
+          id="theme-script"
+          dangerouslySetInnerHTML={{ __html: themeScript }}
+        />
       </head>
       <body className={dmSans.variable}>
-        <Header />
+        <SiteChrome>{children}</SiteChrome>
         <NavigationScroll />
-        {children}
-        <Footer />
       </body>
     </html>
   );
