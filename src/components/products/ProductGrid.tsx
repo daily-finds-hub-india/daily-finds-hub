@@ -1,4 +1,6 @@
 import { ProductCard } from '@/components/products/ProductCard';
+import { EmptyState } from '@/components/ui/EmptyState';
+
 import type { Product } from '@/types/product';
 
 interface ProductGridProps {
@@ -12,9 +14,11 @@ export function ProductGrid({
 }: ProductGridProps) {
   if (products.length === 0) {
     return (
-      <div className="border-t border-[var(--border)] py-16 text-center">
-        <p className="text-sm text-[var(--text-muted)]">{emptyMessage}</p>
-      </div>
+      <EmptyState
+        eyebrow="Nothing here yet"
+        title="No finds in this section."
+        description={emptyMessage}
+      />
     );
   }
 

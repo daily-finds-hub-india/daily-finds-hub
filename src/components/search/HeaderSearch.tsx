@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, Search, X } from 'lucide-react';
 
@@ -43,52 +43,71 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
 
   const hasResults = productResults.length > 0 || categoryResults.length > 0;
 
+  const handleClose = useCallback(() => {
+    setQuery('');
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
-    if (isOpen) {
-      requestAnimationFrame(() => {
-        inputRef.current?.focus();
-      });
+    if (!isOpen) {
+      return;
     }
+
+    const frame = requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
     function handleClickOutside(event: MouseEvent) {
       if (
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
       ) {
-        onClose();
+        handleClose();
       }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        onClose();
+        handleClose();
       }
     }
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleKeyDown);
-    }
+    document.addEventListener('mousedown', handleClickOutside);
+
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
-
-  function handleClose() {
-    setQuery('');
-    onClose();
-  }
+  }, [isOpen, handleClose]);
 
   return (
-    <div ref={containerRef} className="relative flex items-center">
+    <div
+      ref={containerRef}
+      className={cn(
+        'relative flex items-center',
+        isOpen &&
+          'max-sm:absolute max-sm:left-0 max-sm:right-0 max-sm:top-full max-sm:border-b max-sm:border-[var(--border)] max-sm:bg-[var(--background)]'
+      )}
+    >
       <div
         className={cn(
-          'flex items-center overflow-hidden transition-all duration-300 ease-out',
-          isOpen ? 'w-[min(22rem,42vw)] opacity-100' : 'w-10 opacity-100'
+          'flex items-center overflow-hidden transition-[width] duration-300 ease-out',
+          isOpen
+            ? 'w-[min(22rem,42vw)] max-sm:w-full max-sm:px-5 max-sm:py-3'
+            : 'w-10'
         )}
       >
         {!isOpen ? (
@@ -101,7 +120,7 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
             <Search size={18} strokeWidth={1.8} />
           </button>
         ) : (
-          <div className="flex h-10 w-full items-center border-b border-[var(--text-primary)]">
+          <div className="flex h-10 w-full items-center border-b border-[var(--text-primary)] max-sm:h-11">
             <Search
               size={17}
               strokeWidth={1.8}
@@ -131,7 +150,7 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
       </div>
 
       {isOpen && normalizedQuery && (
-        <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(26rem,80vw)] overflow-hidden border border-[var(--border)] bg-[var(--surface)] shadow-[0_16px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.3)]">
+        <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(26rem,80vw)] overflow-hidden border border-[var(--border)] bg-[var(--surface)] shadow-[0_16px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.3)] max-sm:left-0 max-sm:right-0 max-sm:top-[calc(100%+0.75rem)] max-sm:w-full">
           {!hasResults ? (
             <div className="px-5 py-6">
               <p className="text-sm font-medium text-[var(--text-primary)]">
@@ -143,7 +162,7 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
               </p>
             </div>
           ) : (
-            <div className="max-h-[70vh] overflow-y-auto">
+            <div className="max-h-[60vh] overflow-y-auto">
               {productResults.length > 0 && (
                 <div>
                   <div className="border-b border-[var(--border)] px-5 py-3">
