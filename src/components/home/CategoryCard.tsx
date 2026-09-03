@@ -13,14 +13,12 @@ export function CategoryCard({ category }: CategoryCardProps) {
       href={`/category/${category.slug}`}
       className="group relative block min-h-[220px] overflow-hidden border border-[var(--border)] bg-[var(--surface)] transition-colors duration-300 hover:border-[var(--border-strong)] sm:min-h-[260px]"
     >
-      {/* Temporary visual area */}
       <div className="absolute inset-0 bg-[var(--surface-muted)]">
         <div className="absolute right-[-12%] top-[12%] h-44 w-44 rounded-full border border-[var(--border-strong)] transition-transform duration-500 group-hover:scale-110 sm:h-52 sm:w-52" />
 
         <div className="absolute right-[12%] top-[24%] h-28 w-28 rotate-12 border border-[var(--border)] bg-[var(--surface)] transition-transform duration-500 group-hover:rotate-[18deg] group-hover:scale-105 sm:h-36 sm:w-36" />
       </div>
 
-      {/* Content */}
       <div className="relative flex h-full min-h-[220px] flex-col justify-between p-5 sm:min-h-[260px] sm:p-6">
         <div className="flex items-start justify-between">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
