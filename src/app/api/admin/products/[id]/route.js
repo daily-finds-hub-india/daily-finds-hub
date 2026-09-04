@@ -238,7 +238,9 @@ export async function PUT(request, { params }) {
       }
     });
 
-    const retainedPublicIds = new Set(data.images.map((image) => image.publicId));
+    const retainedPublicIds = new Set(
+      data.images.map((image) => image.publicId)
+    );
     const removedPublicIds = product.images
       .map((image) => image.publicId)
       .filter((publicId) => !retainedPublicIds.has(publicId));
@@ -254,7 +256,10 @@ export async function PUT(request, { params }) {
           )
         );
       } catch (cloudinaryError) {
-        console.error('Failed to clean up removed product images:', cloudinaryError);
+        console.error(
+          'Failed to clean up removed product images:',
+          cloudinaryError
+        );
       }
     }
 
