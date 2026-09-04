@@ -1,8 +1,20 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import Image from 'next/image';
+import { Plus } from 'lucide-react';
 import { ImageUploader } from '../ImageUploader';
+import { ConfirmationDialog } from '../ConfirmationDialog';
+import { AdminPageHeader } from '../AdminPageHeader';
+import { AdminFormDialog } from '../AdminFormDialog';
+
+type CategoryImage = {
+  id?: string;
+  url: string;
+  publicId: string;
+  altText: string;
+  isPrimary: boolean;
+};
 
 type Category = {
   id: string;
@@ -18,15 +30,7 @@ type Category = {
   };
 };
 
-type CategoryImage = {
-  id?: string;
-  url: string;
-  publicId: string;
-  altText: string;
-  isPrimary: boolean;
-};
-
-type CategoryForm = {
+type FormState = {
   name: string;
   description: string;
   image: string;
@@ -35,7 +39,7 @@ type CategoryForm = {
   isFeatured: boolean;
 };
 
-const emptyForm: CategoryForm = {
+const emptyForm: FormState = {
   name: '',
   description: '',
   image: '',
@@ -46,21 +50,26 @@ const emptyForm: CategoryForm = {
 
 export function CategoryManager() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [form, setForm] = useState<CategoryForm>(emptyForm);
+  const [form, setForm] = useState<FormState>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
+  const [imageDeleteTarget, setImageDeleteTarget] = useState<number | null>(
+    null
+  );
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  async function loadCategories() {
-    setIsLoading(true);
-    setError('');
-
+  async function loadData() {
     try {
+      setLoading(true);
+      setError('');
+
       const response = await fetch('/api/admin/categories', {
         method: 'GET',
         cache: 'no-store'
@@ -68,24 +77,24 @@ export function CategoryManager() {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
         throw new Error(data.message || 'Failed to load categories.');
       }
 
       setCategories(data.categories);
-    } catch (error) {
+    } catch (err) {
       setError(
-        error instanceof Error ? error.message : 'Failed to load categories.'
+        err instanceof Error ? err.message : 'Failed to load categories.'
       );
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     let cancelled = false;
 
-    async function initializeCategories() {
+    async function initializeData() {
       try {
         const response = await fetch('/api/admin/categories', {
           method: 'GET',
@@ -94,82 +103,89 @@ export function CategoryManager() {
 
         const data = await response.json();
 
-        if (!response.ok) {
+        if (!response.ok || !data.success) {
           throw new Error(data.message || 'Failed to load categories.');
         }
 
         if (!cancelled) {
           setCategories(data.categories);
-          setIsLoading(false);
+          setLoading(false);
         }
-      } catch (error) {
+      } catch (err) {
         if (!cancelled) {
           setError(
-            error instanceof Error
-              ? error.message
-              : 'Failed to load categories.'
+            err instanceof Error ? err.message : 'Failed to load categories.'
           );
-          setIsLoading(false);
+          setLoading(false);
         }
       }
     }
 
-    void initializeCategories();
+    void initializeData();
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  function startCreating() {
-    setEditingId(null);
-    setForm(emptyForm);
-    setError('');
-    setSuccess('');
+  function updateField<K extends keyof FormState>(
+    field: K,
+    value: FormState[K]
+  ) {
+    setForm((current) => ({
+      ...current,
+      [field]: value
+    }));
   }
 
-  function startEditing(category: Category) {
+  function resetForm() {
+    setForm(emptyForm);
+    setEditingId(null);
+    setFormOpen(false);
+  }
+
+  function startCreating() {
+    setForm(emptyForm);
+    setEditingId(null);
+    setMessage('');
+    setError('');
+    setFormOpen(true);
+  }
+
+  function startEdit(category: Category) {
+    const categoryImages =
+      category.images?.length > 0
+        ? category.images
+        : category.image && category.imagePublicId
+          ? [
+              {
+                url: category.image,
+                publicId: category.imagePublicId,
+                altText: category.name,
+                isPrimary: true
+              }
+            ]
+          : [];
+
     setEditingId(category.id);
+    setFormOpen(true);
 
     setForm({
       name: category.name,
       description: category.description,
       image: category.image,
       imagePublicId: category.imagePublicId ?? '',
-      images:
-        category.images?.length > 0
-          ? category.images
-          : category.image && category.imagePublicId
-            ? [
-                {
-                  url: category.image,
-                  publicId: category.imagePublicId,
-                  altText: category.name,
-                  isPrimary: true
-                }
-              ]
-            : [],
+      images: categoryImages,
       isFeatured: category.isFeatured
     });
 
+    setMessage('');
     setError('');
-    setSuccess('');
-  }
 
-  function cancelEditing() {
-    setEditingId(null);
-    setForm(emptyForm);
-    setError('');
-  }
-
-  function updateForm<K extends keyof CategoryForm>(
-    field: K,
-    value: CategoryForm[K]
-  ) {
-    setForm((current) => ({
-      ...current,
-      [field]: value
-    }));
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   }
 
   function addImage(image: { url: string; publicId: string }) {
@@ -194,34 +210,42 @@ export function CategoryManager() {
   function cleanupImage(publicId: string) {
     void fetch('/api/admin/cloudinary/cleanup', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'categories', publicId })
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        type: 'categories',
+        publicId
+      })
     });
   }
 
-  function removeImage(index: number) {
+  function removePendingImage(index: number) {
     setForm((current) => {
-      const images = current.images.filter(
+      const updated = current.images.filter(
         (_, imageIndex) => imageIndex !== index
       );
+
       const removedImage = current.images[index];
 
       if (removedImage && !removedImage.id) {
         cleanupImage(removedImage.publicId);
       }
-      const primaryImage = images.find((image) => image.isPrimary) ?? images[0];
+
+      if (updated.length > 0 && !updated.some((image) => image.isPrimary)) {
+        updated[0] = {
+          ...updated[0],
+          isPrimary: true
+        };
+      }
+
+      const primaryImage = updated.find((image) => image.isPrimary);
 
       return {
         ...current,
         image: primaryImage?.url ?? '',
         imagePublicId: primaryImage?.publicId ?? '',
-        images: images.map((image, imageIndex) => ({
-          ...image,
-          isPrimary: primaryImage
-            ? image.publicId === primaryImage.publicId &&
-              imageIndex === images.indexOf(primaryImage)
-            : false
-        }))
+        images: updated
       };
     });
   }
@@ -232,12 +256,13 @@ export function CategoryManager() {
         ...image,
         isPrimary: imageIndex === index
       }));
+
       const primaryImage = images[index];
 
       return {
         ...current,
-        image: primaryImage.url,
-        imagePublicId: primaryImage.publicId,
+        image: primaryImage?.url ?? '',
+        imagePublicId: primaryImage?.publicId ?? '',
         images
       };
     });
@@ -247,7 +272,12 @@ export function CategoryManager() {
     setForm((current) => ({
       ...current,
       images: current.images.map((image, imageIndex) =>
-        imageIndex === index ? { ...image, altText } : image
+        imageIndex === index
+          ? {
+              ...image,
+              altText
+            }
+          : image
       )
     }));
   }
@@ -255,18 +285,9 @@ export function CategoryManager() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    setIsSaving(true);
+    setSaving(true);
+    setMessage('');
     setError('');
-    setSuccess('');
-
-    const payload = {
-      name: form.name,
-      description: form.description,
-      image: form.image,
-      imagePublicId: form.imagePublicId || null,
-      images: form.images,
-      isFeatured: form.isFeatured
-    };
 
     try {
       const response = await fetch(
@@ -278,32 +299,43 @@ export function CategoryManager() {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({
+            name: form.name,
+            description: form.description,
+            image: form.image,
+            imagePublicId: form.imagePublicId || null,
+            images: form.images,
+            isFeatured: form.isFeatured
+          })
         }
       );
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to save category.');
+      if (!response.ok || !data.success) {
+        const firstFieldError = data.errors
+          ? Object.values(data.errors).flat()[0]
+          : null;
+
+        throw new Error(
+          typeof firstFieldError === 'string'
+            ? firstFieldError
+            : data.message || 'Failed to save category.'
+        );
       }
 
-      setSuccess(
+      setMessage(
         editingId
           ? 'Category updated successfully.'
           : 'Category created successfully.'
       );
 
-      setEditingId(null);
-      setForm(emptyForm);
-
-      await loadCategories();
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : 'Failed to save category.'
-      );
+      resetForm();
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save category.');
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   }
 
@@ -312,21 +344,14 @@ export function CategoryManager() {
       setError(
         `"${category.name}" cannot be deleted because it has products assigned to it.`
       );
-      setSuccess('');
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Delete "${category.name}"? This action cannot be undone.`
-    );
-
-    if (!confirmed) {
+      setMessage('');
+      setDeleteTarget(null);
       return;
     }
 
     setDeletingId(category.id);
+    setMessage('');
     setError('');
-    setSuccess('');
 
     try {
       const response = await fetch(`/api/admin/categories/${category.id}`, {
@@ -335,20 +360,21 @@ export function CategoryManager() {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
         throw new Error(data.message || 'Failed to delete category.');
       }
 
-      setSuccess('Category deleted successfully.');
+      setMessage('Category deleted successfully.');
 
       if (editingId === category.id) {
-        cancelEditing();
+        resetForm();
       }
 
-      await loadCategories();
-    } catch (error) {
+      setDeleteTarget(null);
+      await loadData();
+    } catch (err) {
       setError(
-        error instanceof Error ? error.message : 'Failed to delete category.'
+        err instanceof Error ? err.message : 'Failed to delete category.'
       );
     } finally {
       setDeletingId(null);
@@ -356,100 +382,102 @@ export function CategoryManager() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <p className="text-sm text-[var(--text-muted)]">
-            {categories.length}{' '}
-            {categories.length === 1 ? 'category' : 'categories'}
-          </p>
+    <div className="mx-auto max-w-7xl space-y-8">
+      <AdminPageHeader
+        eyebrow="Category management"
+        title="Categories"
+        description="Manage the categories shown across Daily Finds Hub."
+        action={
+          <button
+            type="button"
+            onClick={startCreating}
+            className="inline-flex items-center gap-2 bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[var(--accent-hover)]"
+          >
+            <Plus size={16} />
+            Add Category
+          </button>
+        }
+      />
+
+      {message && (
+        <div className="border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800">
+          {message}
         </div>
+      )}
 
-        <button
-          type="button"
-          onClick={startCreating}
-          className="bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[var(--accent-hover)]"
-        >
-          Add Category
-        </button>
-      </div>
-
-      {error ? (
-        <div
-          role="alert"
-          className="border border-[var(--border)] bg-[var(--surface)] p-4 text-sm text-[var(--accent)]"
-        >
+      {error && (
+        <div className="border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </div>
-      ) : null}
+      )}
 
-      {success ? (
-        <div
-          role="status"
-          className="border border-[var(--border)] bg-[var(--surface)] p-4 text-sm text-[var(--text-secondary)]"
+      {formOpen ? (
+        <AdminFormDialog
+          open={formOpen}
+          eyebrow={editingId ? 'Edit category' : 'New category'}
+          title={editingId ? 'Update category details' : 'Add a category'}
+          onClose={resetForm}
+          closeDisabled={saving}
         >
-          {success}
-        </div>
-      ) : null}
-
-      <section className="border border-[var(--border)] bg-[var(--surface)]">
-        <div className="border-b border-[var(--border)] px-6 py-4">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">
-            {editingId ? 'Edit Category' : 'Add Category'}
-          </h2>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="grid gap-5">
-            <div>
-              <label
-                htmlFor="category-name"
-                className="mb-2 block text-sm font-medium text-[var(--text-primary)]"
-              >
-                Name
-              </label>
-
-              <input
-                id="category-name"
-                type="text"
+          <form
+            onSubmit={handleSubmit}
+            className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain p-6"
+          >
+            <div className="grid gap-6 md:grid-cols-2">
+              <Field
+                label="Category Name"
                 required
-                maxLength={80}
                 value={form.name}
-                onChange={(event) => updateForm('name', event.target.value)}
+                onChange={(value) => updateField('name', value)}
                 placeholder="Kitchen"
-                className="w-full border border-[var(--border-strong)] bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--accent)]"
               />
-            </div>
 
-            <div>
-              <label
-                htmlFor="category-description"
-                className="mb-2 block text-sm font-medium text-[var(--text-primary)]"
-              >
-                Description
-              </label>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-[var(--text-primary)]">
+                  Featured
+                </label>
 
-              <textarea
-                id="category-description"
-                rows={3}
-                maxLength={300}
-                value={form.description}
-                onChange={(event) =>
-                  updateForm('description', event.target.value)
-                }
-                placeholder="Useful kitchen products and gadgets."
-                className="w-full resize-y border border-[var(--border-strong)] bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--accent)]"
-              />
+                <Checkbox
+                  label="Feature this category"
+                  checked={form.isFeatured}
+                  onChange={(value) => updateField('isFeatured', value)}
+                />
+              </div>
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-[var(--text-primary)]">
-                Category image
+                Description
               </label>
+
+              <textarea
+                value={form.description}
+                onChange={(event) =>
+                  updateField('description', event.target.value)
+                }
+                required
+                maxLength={300}
+                rows={6}
+                placeholder="Useful kitchen products and gadgets."
+                className="w-full resize-y border border-[var(--border-strong)] bg-[var(--background)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--accent)]"
+              />
+            </div>
+
+            <div className="border-t border-[var(--border)] pt-6">
+              <div className="mb-4">
+                <h2 className="text-base font-semibold text-[var(--text-primary)]">
+                  Category Images
+                </h2>
+
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  Upload category images to Cloudinary. The first image is
+                  primary by default.
+                </p>
+              </div>
 
               <ImageUploader type="categories" onUpload={addImage} />
 
-              {form.images.length > 0 ? (
+              {form.images.length > 0 && (
                 <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {form.images.map((image, index) => (
                     <div
@@ -461,14 +489,14 @@ export function CategoryManager() {
                           src={image.url}
                           alt={image.altText}
                           fill
-                          className="object-cover"
+                          className="h-full w-full object-cover"
                         />
 
-                        {image.isPrimary ? (
+                        {image.isPrimary && (
                           <span className="absolute left-3 top-3 bg-[var(--accent)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
                             Primary
                           </span>
-                        ) : null}
+                        )}
                       </div>
 
                       <div className="mt-3">
@@ -488,7 +516,7 @@ export function CategoryManager() {
                       </div>
 
                       <div className="mt-3 flex gap-2">
-                        {!image.isPrimary ? (
+                        {!image.isPrimary && (
                           <button
                             type="button"
                             onClick={() => setPrimaryImage(index)}
@@ -496,11 +524,11 @@ export function CategoryManager() {
                           >
                             Set Primary
                           </button>
-                        ) : null}
+                        )}
 
                         <button
                           type="button"
-                          onClick={() => removeImage(index)}
+                          onClick={() => setImageDeleteTarget(index)}
                           className="border border-red-300 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50"
                         >
                           Remove
@@ -509,101 +537,67 @@ export function CategoryManager() {
                     </div>
                   ))}
                 </div>
-              ) : form.image ? (
-                <div className="mt-4">
-                  <Image
-                    src={form.image}
-                    alt="Category preview"
-                    width={128}
-                    height={128}
-                    className="h-32 w-32 rounded-lg border border-[var(--border)] object-cover"
-                  />
-                </div>
-              ) : null}
+              )}
             </div>
 
-            <label className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={form.isFeatured}
-                onChange={(event) =>
-                  updateForm('isFeatured', event.target.checked)
-                }
-                className="h-4 w-4"
-              />
-
-              <span className="text-sm text-[var(--text-primary)]">
-                Feature this category
-              </span>
-            </label>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSaving
-                ? 'Saving...'
-                : editingId
-                  ? 'Update Category'
-                  : 'Create Category'}
-            </button>
-
-            {editingId ? (
+            <div className="flex flex-wrap gap-3 border-t border-[var(--border)] pt-6">
               <button
-                type="button"
-                onClick={cancelEditing}
-                disabled={isSaving}
-                className="border border-[var(--border-strong)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-60"
+                type="submit"
+                disabled={saving}
+                className="bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Cancel
+                {saving
+                  ? 'Saving...'
+                  : editingId
+                    ? 'Update Category'
+                    : 'Create Category'}
               </button>
-            ) : null}
-          </div>
-        </form>
-      </section>
 
-      <section className="border border-[var(--border)] bg-[var(--surface)]">
-        <div className="border-b border-[var(--border)] px-6 py-4">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">
-            All Categories
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  disabled={saving}
+                  className="border border-[var(--border-strong)] px-5 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Cancel Edit
+                </button>
+              )}
+            </div>
+          </form>
+        </AdminFormDialog>
+      ) : null}
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+            Categories
           </h2>
+
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            {categories.length} categor
+            {categories.length === 1 ? 'y' : 'ies'} in the database.
+          </p>
         </div>
 
-        {isLoading ? (
-          <div className="p-6 text-sm text-[var(--text-secondary)]">
+        {loading ? (
+          <div className="border border-[var(--border)] p-6 text-sm text-[var(--text-secondary)]">
             Loading categories...
           </div>
         ) : categories.length === 0 ? (
-          <div className="p-6 text-sm text-[var(--text-secondary)]">
+          <div className="border border-[var(--border)] p-8 text-center text-sm text-[var(--text-secondary)]">
             No categories yet. Create your first category above.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[650px] text-left text-sm">
-              <thead className="border-b border-[var(--border)]">
+          <div className="overflow-x-auto border border-[var(--border)]">
+            <table className="min-w-full text-sm">
+              <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)]">
                 <tr>
-                  <th className="px-6 py-3 font-medium text-[var(--text-muted)]">
-                    Category
-                  </th>
-
-                  <th className="px-6 py-3 font-medium text-[var(--text-muted)]">
-                    Slug
-                  </th>
-
-                  <th className="px-6 py-3 font-medium text-[var(--text-muted)]">
-                    Featured
-                  </th>
-
-                  <th className="px-6 py-3 font-medium text-[var(--text-muted)]">
-                    Products
-                  </th>
-
-                  <th className="px-6 py-3 font-medium text-[var(--text-muted)]">
-                    Actions
-                  </th>
+                  <th className="px-4 py-3 text-left font-medium">Category</th>
+                  <th className="px-4 py-3 text-left font-medium">Slug</th>
+                  <th className="px-4 py-3 text-left font-medium">Featured</th>
+                  <th className="px-4 py-3 text-left font-medium">Products</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
 
@@ -613,7 +607,7 @@ export function CategoryManager() {
                     key={category.id}
                     className="border-b border-[var(--border)] last:border-b-0"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         {category.image ? (
                           <Image
@@ -624,58 +618,53 @@ export function CategoryManager() {
                             className="h-12 w-12 rounded-md border border-[var(--border)] object-cover"
                           />
                         ) : (
-                          <div className="h-12 w-12 rounded-md border border-[var(--border)] bg-[var(--surface-muted)]" />
+                          <div className="h-12 w-12 border border-[var(--border)] bg-[var(--surface-muted)]" />
                         )}
 
-                        <div>
-                          <p className="font-medium text-[var(--text-primary)]">
+                        <div className="min-w-0">
+                          <div className="font-medium text-[var(--text-primary)]">
                             {category.name}
-                          </p>
+                          </div>
 
-                          {category.description ? (
-                            <p className="mt-1 max-w-xs truncate text-xs text-[var(--text-muted)]">
-                              {category.description}
-                            </p>
-                          ) : null}
+                          <div className="mt-1 text-xs text-[var(--text-secondary)]">
+                            {category.images?.length ?? 0} image
+                            {(category.images?.length ?? 0) === 1 ? '' : 's'}
+                          </div>
                         </div>
                       </div>
                     </td>
 
-                    <td className="px-6 py-4 text-[var(--text-secondary)]">
+                    <td className="px-4 py-4 text-[var(--text-secondary)]">
                       {category.slug}
                     </td>
 
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4">
                       {category.isFeatured ? (
-                        <span className="text-sm font-medium text-[var(--accent)]">
-                          Yes
-                        </span>
+                        <StatusBadge label="Featured" />
                       ) : (
-                        <span className="text-sm text-[var(--text-muted)]">
-                          No
-                        </span>
+                        <StatusBadge label="Standard" />
                       )}
                     </td>
 
-                    <td className="px-6 py-4 text-[var(--text-secondary)]">
+                    <td className="px-4 py-4 text-[var(--text-secondary)]">
                       {category._count?.products ?? 0}
                     </td>
 
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                    <td className="px-4 py-4">
+                      <div className="flex justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => startEditing(category)}
-                          className="text-sm font-medium text-[var(--text-primary)] transition hover:text-[var(--accent)]"
+                          onClick={() => startEdit(category)}
+                          className="border border-[var(--border-strong)] px-3 py-2 text-xs font-medium transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
                         >
                           Edit
                         </button>
 
                         <button
                           type="button"
-                          onClick={() => handleDelete(category)}
+                          onClick={() => setDeleteTarget(category)}
                           disabled={deletingId === category.id}
-                          className="text-sm font-medium text-[var(--accent)] transition hover:text-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                          className="border border-red-300 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {deletingId === category.id
                             ? 'Deleting...'
@@ -690,6 +679,112 @@ export function CategoryManager() {
           </div>
         )}
       </section>
+
+      <ConfirmationDialog
+        open={deleteTarget !== null}
+        title="Delete this category?"
+        description={
+          deleteTarget
+            ? `"${deleteTarget.name}" cannot be recovered after deletion. Categories with assigned products cannot be deleted.`
+            : ''
+        }
+        isLoading={deleteTarget !== null && deletingId === deleteTarget.id}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            void handleDelete(deleteTarget);
+          }
+        }}
+      />
+
+      <ConfirmationDialog
+        open={imageDeleteTarget !== null}
+        title="Remove this image?"
+        description="This removes the image from the category gallery. Save the category to keep the change."
+        confirmLabel="Remove image"
+        onCancel={() => setImageDeleteTarget(null)}
+        onConfirm={() => {
+          if (imageDeleteTarget !== null) {
+            removePendingImage(imageDeleteTarget);
+            setImageDeleteTarget(null);
+          }
+        }}
+      />
     </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  required = false,
+  min,
+  max,
+  step
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+  min?: string;
+  max?: string;
+  step?: string;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-medium text-[var(--text-primary)]">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        required={required}
+        min={min}
+        max={max}
+        step={step}
+        className="w-full border border-[var(--border-strong)] bg-[var(--background)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--accent)]"
+      />
+    </div>
+  );
+}
+
+function Checkbox({
+  label,
+  checked,
+  onChange
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-3 border border-[var(--border)] p-3">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="h-4 w-4"
+      />
+
+      <span className="text-sm font-medium text-[var(--text-primary)]">
+        {label}
+      </span>
+    </label>
+  );
+}
+
+function StatusBadge({ label }: { label: string }) {
+  return (
+    <span className="inline-flex border border-[var(--border-strong)] px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+      {label}
+    </span>
   );
 }

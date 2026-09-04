@@ -10,9 +10,13 @@ export function LogoutButton() {
   async function handleLogout() {
     setIsLoggingOut(true);
 
-    await signOut({
-      callbackUrl: '/admin/login'
-    });
+    try {
+      await signOut({
+        callbackUrl: '/admin/login'
+      });
+    } catch {
+      setIsLoggingOut(false);
+    }
   }
 
   return (

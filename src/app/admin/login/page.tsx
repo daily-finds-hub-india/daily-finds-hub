@@ -22,20 +22,25 @@ export default function AdminLoginPage() {
 
     const callbackUrl = searchParams.get('callbackUrl') || '/admin';
 
-    const result = await signIn('credentials', {
-      username,
-      password,
-      redirect: false,
-      callbackUrl
-    });
+    try {
+      const result = await signIn('credentials', {
+        username,
+        password,
+        redirect: false,
+        callbackUrl
+      });
 
-    if (result?.error) {
-      setError('Invalid username or password.');
+      if (result?.error) {
+        setError('Invalid username or password.');
+        return;
+      }
+
+      window.location.href = result?.url || callbackUrl;
+    } catch {
+      setError('Unable to sign in right now. Please try again.');
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    window.location.href = result?.url || callbackUrl;
   }
 
   return (
