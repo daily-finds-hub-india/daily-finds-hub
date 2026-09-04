@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowUpRight } from 'lucide-react';
 
 type Category = {
@@ -21,9 +22,17 @@ export function CategoryCard({ category }: CategoryCardProps) {
       className="group relative block min-h-[220px] overflow-hidden border border-[var(--border)] bg-[var(--surface)] transition-colors duration-300 hover:border-[var(--border-strong)] sm:min-h-[260px]"
     >
       <div className="absolute inset-0 bg-[var(--surface-muted)]">
-        <div className="absolute right-[-12%] top-[12%] h-44 w-44 rounded-full border border-[var(--border-strong)] transition-transform duration-500 group-hover:scale-110 sm:h-52 sm:w-52" />
+        {category.image ? (
+          <Image
+            src={category.image}
+            alt=""
+            fill
+            sizes="(min-width: 640px) 33vw, 100vw"
+            className="object-cover opacity-70 transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : null}
 
-        <div className="absolute right-[12%] top-[24%] h-28 w-28 rotate-12 border border-[var(--border)] bg-[var(--surface)] transition-transform duration-500 group-hover:rotate-[18deg] group-hover:scale-105 sm:h-36 sm:w-36" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.92))]" />
       </div>
 
       <div className="relative flex h-full min-h-[220px] flex-col justify-between p-5 sm:min-h-[260px] sm:p-6">

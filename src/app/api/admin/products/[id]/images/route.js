@@ -195,6 +195,9 @@ export async function PUT(request, { params }) {
 
     const imageId =
       typeof body?.imageId === 'string' ? body.imageId.trim() : '';
+    const hasAltText = typeof body?.altText === 'string';
+    const altText = hasAltText ? body.altText.trim() : '';
+    const makePrimary = body?.isPrimary === true;
 
     if (!imageId) {
       return NextResponse.json(
@@ -202,6 +205,13 @@ export async function PUT(request, { params }) {
           success: false,
           message: 'Image ID is required.'
         },
+        { status: 400 }
+      );
+    }
+
+    if (hasAltText && altText.length > MAX_ALT_TEXT_LENGTH) {
+      return NextResponse.json(
+        { success: false, message: 'Alt text is too long.' },
         { status: 400 }
       );
     }
@@ -224,14 +234,19 @@ export async function PUT(request, { params }) {
     }
 
     await prisma.$transaction(async (transaction) => {
-      await transaction.productImage.updateMany({
-        where: { productId: id },
-        data: { isPrimary: false }
-      });
+      if (makePrimary) {
+        await transaction.productImage.updateMany({
+          where: { productId: id },
+          data: { isPrimary: false }
+        });
+      }
 
       await transaction.productImage.update({
         where: { id: imageId },
-        data: { isPrimary: true }
+        data: {
+          ...(makePrimary ? { isPrimary: true } : {}),
+          ...(hasAltText ? { altText } : {})
+        }
       });
     });
 

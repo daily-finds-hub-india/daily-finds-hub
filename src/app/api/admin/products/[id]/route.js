@@ -123,7 +123,10 @@ export async function PUT(request, { params }) {
           id
         },
         select: {
-          id: true
+          id: true,
+          images: {
+            select: { publicId: true }
+          }
         }
       }),
 
@@ -234,6 +237,26 @@ export async function PUT(request, { params }) {
         }
       }
     });
+
+    const retainedPublicIds = new Set(data.images.map((image) => image.publicId));
+    const removedPublicIds = product.images
+      .map((image) => image.publicId)
+      .filter((publicId) => !retainedPublicIds.has(publicId));
+
+    if (removedPublicIds.length > 0) {
+      try {
+        await Promise.all(
+          [...new Set(removedPublicIds)].map((publicId) =>
+            cloudinary.uploader.destroy(publicId, {
+              resource_type: 'image',
+              invalidate: true
+            })
+          )
+        );
+      } catch (cloudinaryError) {
+        console.error('Failed to clean up removed product images:', cloudinaryError);
+      }
+    }
 
     return NextResponse.json({
       success: true,

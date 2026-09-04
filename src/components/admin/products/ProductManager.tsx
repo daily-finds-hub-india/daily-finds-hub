@@ -10,6 +10,7 @@ type Category = {
 };
 
 type ProductImage = {
+  id?: string;
   url: string;
   publicId: string;
   altText: string;
@@ -230,9 +231,22 @@ export function ProductManager() {
     });
   }
 
+  function cleanupImage(publicId: string) {
+    void fetch('/api/admin/cloudinary/cleanup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'products', publicId })
+    });
+  }
+
   function removePendingImage(index: number) {
     setImages((current) => {
       const updated = current.filter((_, imageIndex) => imageIndex !== index);
+      const removedImage = current[index];
+
+      if (removedImage && !removedImage.id) {
+        cleanupImage(removedImage.publicId);
+      }
 
       if (updated.length > 0 && !updated.some((image) => image.isPrimary)) {
         updated[0] = {

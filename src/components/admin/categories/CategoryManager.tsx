@@ -191,11 +191,24 @@ export function CategoryManager() {
     });
   }
 
+  function cleanupImage(publicId: string) {
+    void fetch('/api/admin/cloudinary/cleanup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'categories', publicId })
+    });
+  }
+
   function removeImage(index: number) {
     setForm((current) => {
       const images = current.images.filter(
         (_, imageIndex) => imageIndex !== index
       );
+      const removedImage = current.images[index];
+
+      if (removedImage && !removedImage.id) {
+        cleanupImage(removedImage.publicId);
+      }
       const primaryImage = images.find((image) => image.isPrimary) ?? images[0];
 
       return {
