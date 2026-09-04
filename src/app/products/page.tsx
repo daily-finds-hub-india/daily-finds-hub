@@ -17,32 +17,41 @@ export default async function ProductsPage({
 }: ProductsPageProps) {
   const params = await searchParams;
 
-  const [categories, selectedCategory] = await Promise.all([
-    prisma.category.findMany({
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true }
-    }),
-    params.category
-      ? prisma.category.findUnique({
-          where: { id: params.category },
-          select: { id: true }
-        })
-      : null
-  ]);
+  const categories = await prisma.category.findMany({
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true }
+  });
 
   const sortOrder =
-    params.sort === 'price-low'
-      ? { price: 'asc' as const }
-      : params.sort === 'price-high'
-        ? { price: 'desc' as const }
-        : params.sort === 'rating'
-          ? { rating: 'desc' as const }
-          : { isFeatured: 'desc' as const };
+    params.sort === 'newest'
+      ? [{ createdAt: 'desc' as const }]
+      : params.sort === 'oldest'
+        ? [{ createdAt: 'asc' as const }]
+        : params.sort === 'price-low'
+          ? [{ price: 'asc' as const }]
+          : params.sort === 'price-high'
+            ? [{ price: 'desc' as const }]
+            : params.sort === 'rating'
+              ? [{ rating: 'desc' as const }, { createdAt: 'desc' as const }]
+              : params.sort === 'reviews'
+                ? [
+                    { reviewCount: 'desc' as const },
+                    { createdAt: 'desc' as const }
+                  ]
+                : params.sort === 'trending'
+                  ? [
+                      { isTrending: 'desc' as const },
+                      { createdAt: 'desc' as const }
+                    ]
+                  : [
+                      { isFeatured: 'desc' as const },
+                      { createdAt: 'desc' as const }
+                    ];
 
   const products = await prisma.product.findMany({
     where: {
       isPublished: true,
-      ...(selectedCategory ? { categoryId: selectedCategory.id } : {})
+      ...(params.category ? { categoryId: params.category } : {})
     },
     orderBy: sortOrder,
     include: {
@@ -63,7 +72,14 @@ export default async function ProductsPage({
 
           <div className="mt-14">
             <ProductFilters categories={categories} />
-            <ProductGrid products={products} />
+            <ProductGrid
+              products={products}
+              emptyMessage={
+                params.category
+                  ? 'No published products match this category and sort.'
+                  : 'No published products are available yet.'
+              }
+            />
           </div>
         </Container>
       </Section>

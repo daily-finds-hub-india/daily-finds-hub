@@ -1,5 +1,8 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
 import { ArrowLeft, ArrowUpRight, Star } from 'lucide-react';
 
 type Product = {
@@ -32,31 +35,65 @@ interface ProductDetailsProps {
 }
 
 export function ProductDetails({ product }: ProductDetailsProps) {
-  const image = product.images?.find((item) => item.isPrimary) ?? product.images?.[0];
+  const images = product.images ?? [];
+  const primaryIndex = Math.max(
+    0,
+    images.findIndex((item) => item.isPrimary)
+  );
+  const [selectedIndex, setSelectedIndex] = useState(primaryIndex);
+  const image = images[selectedIndex] ?? images[0];
 
   return (
     <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-24">
-      <div className="relative aspect-square overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-muted)]">
-        {image ? (
-          <Image
-            src={image.url}
-            alt={image.altText || product.name}
-            fill
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            className="object-cover"
-            priority
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-[48%] w-[48%] border border-[var(--border-strong)] bg-[var(--surface)] shadow-[0_24px_60px_rgba(0,0,0,0.12)]" />
-          </div>
-        )}
+      <div>
+        <div className="relative aspect-square overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-muted)]">
+          {image ? (
+            <Image
+              src={image.url}
+              alt={image.altText || product.name}
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-[48%] w-[48%] border border-[var(--border-strong)] bg-[var(--surface)] shadow-[0_24px_60px_rgba(0,0,0,0.12)]" />
+            </div>
+          )}
 
-        {product.isTrending && (
-          <span className="absolute left-5 top-5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
-            Trending
-          </span>
-        )}
+          {product.isTrending && (
+            <span className="absolute left-5 top-5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
+              Trending
+            </span>
+          )}
+        </div>
+
+        {images.length > 1 ? (
+          <div className="mt-4 grid grid-cols-5 gap-3">
+            {images.map((galleryImage, index) => (
+              <button
+                key={galleryImage.url}
+                type="button"
+                onClick={() => setSelectedIndex(index)}
+                aria-label={`View product image ${index + 1}`}
+                className={`relative aspect-square overflow-hidden rounded-[var(--radius-md)] border-2 ${
+                  selectedIndex === index
+                    ? 'border-[var(--accent)]'
+                    : 'border-transparent'
+                }`}
+              >
+                <Image
+                  src={galleryImage.url}
+                  alt={galleryImage.altText || product.name}
+                  fill
+                  sizes="100px"
+                  className="object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-col justify-center">
@@ -116,19 +153,26 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
         <div className="mt-8">
           {product.amazonUrl ? (
-            <a
-              href={product.amazonUrl}
-              target="_blank"
-              rel="noopener noreferrer sponsored"
-              className="group inline-flex items-center gap-3 bg-[var(--text-primary)] px-6 py-3.5 text-sm font-medium text-[var(--background)] transition-colors duration-200 hover:bg-[var(--accent)]"
-            >
-              View on Amazon
-              <ArrowUpRight
-                size={16}
-                strokeWidth={1.8}
-                className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-              />
-            </a>
+            <div>
+              <a
+                href={product.amazonUrl}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                aria-label={`View ${product.name} on Amazon.in (affiliate link)`}
+                className="group inline-flex items-center gap-3 bg-[var(--text-primary)] px-6 py-3.5 text-sm font-medium text-[var(--background)] transition-colors duration-200 hover:bg-[var(--accent)]"
+              >
+                View on Amazon
+                <ArrowUpRight
+                  size={16}
+                  strokeWidth={1.8}
+                  className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
+              </a>
+
+              <p className="mt-3 text-xs leading-5 text-[var(--text-muted)]">
+                Affiliate link. We may earn from qualifying purchases.
+              </p>
+            </div>
           ) : (
             <p className="text-sm text-[var(--text-muted)]">
               Amazon link will be added when this product is ready.

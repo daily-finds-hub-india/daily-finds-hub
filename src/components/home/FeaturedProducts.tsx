@@ -5,6 +5,7 @@ import { Container } from '@/components/layout/Container';
 import { ProductCard } from '@/components/products/ProductCard';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 type Product = {
   id: string;
@@ -32,7 +33,17 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
   const featuredProducts = products.slice(0, 3);
 
   if (featuredProducts.length === 0) {
-    return null;
+    return (
+      <Section>
+        <Container>
+          <EmptyState
+            eyebrow="Today's finds"
+            title="No featured finds yet."
+            description="New products will appear here as soon as they are published."
+          />
+        </Container>
+      </Section>
+    );
   }
 
   return (

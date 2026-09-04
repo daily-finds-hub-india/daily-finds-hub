@@ -4,9 +4,21 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, Search, X } from 'lucide-react';
 
-import { categories } from '@/data/categories';
-import { products } from '@/data/products';
 import { cn } from '@/lib/utils';
+
+type SearchProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  shortDescription: string;
+};
+
+type SearchCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+};
 
 interface HeaderSearchProps {
   isOpen: boolean;
@@ -16,32 +28,55 @@ interface HeaderSearchProps {
 
 export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
   const [query, setQuery] = useState('');
+  const [productResults, setProductResults] = useState<SearchProduct[]>([]);
+  const [categoryResults, setCategoryResults] = useState<SearchCategory[]>([]);
+  const [resultsQuery, setResultsQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = query.trim();
 
-  const productResults = normalizedQuery
-    ? products.filter((product) => {
-        const searchText = [product.name, product.description, product.category]
-          .join(' ')
-          .toLowerCase();
+  useEffect(() => {
+    const controller = new AbortController();
 
-        return searchText.includes(normalizedQuery);
-      })
-    : [];
+    if (!normalizedQuery) {
+      return () => controller.abort();
+    }
 
-  const categoryResults = normalizedQuery
-    ? categories.filter((category) => {
-        const searchText = [category.name, category.description]
-          .join(' ')
-          .toLowerCase();
+    const timeout = window.setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/search?q=${encodeURIComponent(normalizedQuery)}`,
+          { signal: controller.signal }
+        );
+        const data = await response.json();
 
-        return searchText.includes(normalizedQuery);
-      })
-    : [];
+        if (response.ok && data.success) {
+          setProductResults(data.products);
+          setCategoryResults(data.categories);
+          setResultsQuery(normalizedQuery);
+        }
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          setProductResults([]);
+          setCategoryResults([]);
+        }
+      }
+    }, 200);
 
-  const hasResults = productResults.length > 0 || categoryResults.length > 0;
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [normalizedQuery]);
+
+  const visibleProductResults =
+    resultsQuery === normalizedQuery ? productResults : [];
+  const visibleCategoryResults =
+    resultsQuery === normalizedQuery ? categoryResults : [];
+
+  const hasResults =
+    visibleProductResults.length > 0 || visibleCategoryResults.length > 0;
 
   const handleClose = useCallback(() => {
     setQuery('');
@@ -163,7 +198,7 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
             </div>
           ) : (
             <div className="max-h-[60vh] overflow-y-auto">
-              {productResults.length > 0 && (
+              {visibleProductResults.length > 0 && (
                 <div>
                   <div className="border-b border-[var(--border)] px-5 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
@@ -172,7 +207,7 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
                   </div>
 
                   <div className="divide-y divide-[var(--border)]">
-                    {productResults.map((product) => (
+                    {visibleProductResults.map((product) => (
                       <Link
                         key={product.id}
                         href={`/products/${product.slug}`}
@@ -185,7 +220,7 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
                           </p>
 
                           <p className="mt-1 truncate text-xs text-[var(--text-secondary)]">
-                            {product.description}
+                            {product.shortDescription}
                           </p>
                         </div>
 
@@ -200,7 +235,7 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
                 </div>
               )}
 
-              {categoryResults.length > 0 && (
+              {visibleCategoryResults.length > 0 && (
                 <div>
                   <div className="border-b border-t border-[var(--border)] px-5 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
@@ -209,7 +244,7 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
                   </div>
 
                   <div className="divide-y divide-[var(--border)]">
-                    {categoryResults.map((category) => (
+                    {visibleCategoryResults.map((category) => (
                       <Link
                         key={category.id}
                         href={`/category/${category.slug}`}

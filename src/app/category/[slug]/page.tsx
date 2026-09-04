@@ -22,6 +22,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         where: { isPublished: true },
         orderBy: { createdAt: 'desc' },
         include: {
+          images: { orderBy: { displayOrder: 'asc' } },
           _count: { select: { images: true } }
         }
       }

@@ -8,7 +8,13 @@ type Category = {
   slug: string;
   description: string | null;
   image: string;
+  images?: CategoryImage[];
   isFeatured?: boolean;
+};
+
+type CategoryImage = {
+  url: string;
+  isPrimary: boolean;
 };
 
 interface CategoryCardProps {
@@ -16,15 +22,19 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ category }: CategoryCardProps) {
+  const image =
+    category.images?.find((item) => item.isPrimary) ?? category.images?.[0];
+  const imageUrl = image?.url ?? category.image;
+
   return (
     <Link
       href={`/category/${category.slug}`}
       className="group relative block min-h-[220px] overflow-hidden border border-[var(--border)] bg-[var(--surface)] transition-colors duration-300 hover:border-[var(--border-strong)] sm:min-h-[260px]"
     >
       <div className="absolute inset-0 bg-[var(--surface-muted)]">
-        {category.image ? (
+        {imageUrl ? (
           <Image
-            src={category.image}
+            src={imageUrl}
             alt=""
             fill
             sizes="(min-width: 640px) 33vw, 100vw"

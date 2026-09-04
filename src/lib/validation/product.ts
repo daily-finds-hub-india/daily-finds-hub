@@ -10,10 +10,14 @@ const amazonUrlSchema = z
 
       try {
         const url = new URL(value);
+        const hostname = url.hostname.toLowerCase();
 
         return (
           url.protocol === 'https:' &&
-          (url.hostname === 'amazon.in' || url.hostname.endsWith('.amazon.in'))
+          !url.username &&
+          !url.password &&
+          (hostname === 'amazon.in' || hostname.endsWith('.amazon.in')) &&
+          url.pathname.length > 1
         );
       } catch {
         return false;

@@ -5,6 +5,7 @@ import { Container } from '@/components/layout/Container';
 import { CategoryCard } from '@/components/home/CategoryCard';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 type Category = {
   id: string;
@@ -23,7 +24,17 @@ export function Categories({ categories }: CategoriesProps) {
   const featuredCategories = categories.slice(0, 3);
 
   if (featuredCategories.length === 0) {
-    return null;
+    return (
+      <Section className="border-t border-[var(--border)]">
+        <Container>
+          <EmptyState
+            eyebrow="Explore"
+            title="No categories yet."
+            description="Categories will appear here as the collection grows."
+          />
+        </Container>
+      </Section>
+    );
   }
 
   return (

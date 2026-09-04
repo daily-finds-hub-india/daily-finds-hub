@@ -16,8 +16,7 @@ export default async function Home() {
       orderBy: {
         createdAt: 'desc'
       },
-      take: 6
-      ,
+      take: 6,
       include: { images: { orderBy: { displayOrder: 'asc' } } }
     }),
 
@@ -29,8 +28,7 @@ export default async function Home() {
       orderBy: {
         createdAt: 'desc'
       },
-      take: 6
-      ,
+      take: 6,
       include: { images: { orderBy: { displayOrder: 'asc' } } }
     }),
 
@@ -41,7 +39,10 @@ export default async function Home() {
       orderBy: {
         name: 'asc'
       },
-      take: 6
+      take: 6,
+      include: {
+        images: { orderBy: { displayOrder: 'asc' } }
+      }
     })
   ]);
 

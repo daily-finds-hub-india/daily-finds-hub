@@ -5,6 +5,7 @@ import { Container } from '@/components/layout/Container';
 import { ProductCard } from '@/components/products/ProductCard';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 type Product = {
   id: string;
@@ -32,7 +33,17 @@ export function TrendingProducts({ products }: TrendingProductsProps) {
   const trendingProducts = products.slice(0, 4);
 
   if (trendingProducts.length === 0) {
-    return null;
+    return (
+      <Section className="border-t border-[var(--border)]">
+        <Container>
+          <EmptyState
+            eyebrow="Trending now"
+            title="No trending finds yet."
+            description="Products will appear here as they start getting attention."
+          />
+        </Container>
+      </Section>
+    );
   }
 
   return (

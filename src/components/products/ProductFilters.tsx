@@ -15,9 +15,13 @@ interface ProductFiltersProps {
 
 const sortOptions = [
   { value: 'featured', label: 'Featured' },
+  { value: 'trending', label: 'Trending' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'oldest', label: 'Oldest' },
   { value: 'price-low', label: 'Price: Low to high' },
   { value: 'price-high', label: 'Price: High to low' },
-  { value: 'rating', label: 'Top rated' }
+  { value: 'rating', label: 'Highest rated' },
+  { value: 'reviews', label: 'Most reviewed' }
 ];
 
 export function ProductFilters({ categories }: ProductFiltersProps) {
