@@ -26,6 +26,9 @@ export async function GET() {
         name: 'asc'
       },
       include: {
+        images: {
+          orderBy: [{ isPrimary: 'desc' }, { displayOrder: 'asc' }]
+        },
         _count: {
           select: {
             products: true
@@ -75,6 +78,8 @@ export async function POST(request: Request) {
 
     const data = result.data;
     const slug = createSlug(data.name);
+    const primaryImage =
+      data.images.find((image) => image.isPrimary) ?? data.images[0];
 
     if (!slug) {
       return NextResponse.json(
@@ -120,8 +125,18 @@ export async function POST(request: Request) {
         name: data.name,
         slug,
         description: data.description,
-        image: data.image,
-        isFeatured: data.isFeatured
+        image: primaryImage?.url ?? data.image,
+        imagePublicId: primaryImage?.publicId ?? data.imagePublicId ?? null,
+        isFeatured: data.isFeatured,
+        images: {
+          create: data.images.map((image, index) => ({
+            url: image.url,
+            publicId: image.publicId,
+            altText: image.altText,
+            isPrimary: image.isPrimary || (!primaryImage && index === 0),
+            displayOrder: index
+          }))
+        }
       }
     });
 

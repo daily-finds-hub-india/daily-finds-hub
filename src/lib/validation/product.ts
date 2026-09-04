@@ -30,6 +30,15 @@ const asinSchema = z
   .toUpperCase()
   .regex(/^[A-Z0-9]{10}$/, 'ASIN must contain exactly 10 letters/numbers.');
 
+const productImagesSchema = z.array(
+  z.object({
+    url: z.string().trim().url('Image URL must be valid.'),
+    publicId: z.string().trim().min(1, 'Image public ID is required.'),
+    altText: z.string().trim().max(200, 'Alt text is too long.'),
+    isPrimary: z.boolean()
+  })
+);
+
 export const productCreateSchema = z.object({
   name: z
     .string()
@@ -90,10 +99,13 @@ export const productCreateSchema = z.object({
 
   isTrending: z.boolean().default(false),
 
-  isPublished: z.boolean().default(false)
+  isPublished: z.boolean().default(false),
+
+  images: productImagesSchema.default([])
 });
 
 export const productUpdateSchema = productCreateSchema;
 
 export type ProductCreateInput = z.infer<typeof productCreateSchema>;
+
 export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;

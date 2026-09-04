@@ -8,17 +8,35 @@ datasource db {
 }
 
 model Category {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  slug        String   @unique
-  description String
-  image       String
-  isFeatured  Boolean  @default(false)
+  id            String   @id @default(cuid())
+  name          String   @unique
+  slug          String   @unique
+  description   String
+  image         String
+  imagePublicId String?
+  isFeatured    Boolean  @default(false)
 
   products Product[]
+  images   CategoryImage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model CategoryImage {
+  id          String   @id @default(cuid())
+  categoryId  String
+  url         String
+  publicId    String
+  altText     String
+  displayOrder Int     @default(0)
+  isPrimary   Boolean  @default(false)
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([categoryId])
 }
 
 model Product {
@@ -58,14 +76,15 @@ model Product {
 }
 
 model ProductImage {
-  id        String  @id @default(cuid())
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  url          String
-  altText      String?
+  id          String   @id @default(cuid())
+  productId   String
+  url         String
+  publicId    String
+  altText     String
   displayOrder Int     @default(0)
-  isPrimary    Boolean @default(false)
+  isPrimary   Boolean  @default(false)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 

@@ -46,6 +46,7 @@ export default async function ProductsPage({
     },
     orderBy: sortOrder,
     include: {
+      images: { orderBy: { displayOrder: 'asc' } },
       _count: { select: { images: true } }
     }
   });

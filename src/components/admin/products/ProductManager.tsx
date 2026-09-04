@@ -1,10 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { ImageUploader } from '../ImageUploader';
 
 type Category = {
   id: string;
   name: string;
+};
+
+type ProductImage = {
+  url: string;
+  publicId: string;
+  altText: string;
+  isPrimary: boolean;
 };
 
 type Product = {
@@ -27,6 +36,7 @@ type Product = {
     id: string;
     name: string;
   };
+  images: ProductImage[];
   _count: {
     images: number;
   };
@@ -68,6 +78,7 @@ export function ProductManager() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [images, setImages] = useState<ProductImage[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -172,6 +183,7 @@ export function ProductManager() {
 
   function resetForm() {
     setForm(emptyForm);
+    setImages([]);
     setEditingId(null);
   }
 
@@ -194,6 +206,8 @@ export function ProductManager() {
       isPublished: product.isPublished
     });
 
+    setImages(product.images ?? []);
+
     setMessage('');
     setError('');
 
@@ -201,6 +215,56 @@ export function ProductManager() {
       top: 0,
       behavior: 'smooth'
     });
+  }
+
+  function addImage(image: { url: string; publicId: string }) {
+    setImages((current) => {
+      const newImage: ProductImage = {
+        url: image.url,
+        publicId: image.publicId,
+        altText: form.name.trim() || 'Product image',
+        isPrimary: current.length === 0
+      };
+
+      return [...current, newImage];
+    });
+  }
+
+  function removePendingImage(index: number) {
+    setImages((current) => {
+      const updated = current.filter((_, imageIndex) => imageIndex !== index);
+
+      if (updated.length > 0 && !updated.some((image) => image.isPrimary)) {
+        updated[0] = {
+          ...updated[0],
+          isPrimary: true
+        };
+      }
+
+      return updated;
+    });
+  }
+
+  function setPrimaryImage(index: number) {
+    setImages((current) =>
+      current.map((image, imageIndex) => ({
+        ...image,
+        isPrimary: imageIndex === index
+      }))
+    );
+  }
+
+  function updateImageAltText(index: number, altText: string) {
+    setImages((current) =>
+      current.map((image, imageIndex) =>
+        imageIndex === index
+          ? {
+              ...image,
+              altText
+            }
+          : image
+      )
+    );
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -223,7 +287,8 @@ export function ProductManager() {
             price: Number(form.price),
             originalPrice: form.originalPrice ? Number(form.originalPrice) : '',
             rating: Number(form.rating),
-            reviewCount: Number(form.reviewCount)
+            reviewCount: Number(form.reviewCount),
+            images
           })
         }
       );
@@ -306,8 +371,7 @@ export function ProductManager() {
         </h1>
 
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
-          Manage the products shown across Daily Finds Hub. Product images will
-          be connected through Cloudinary in the next stage.
+          Manage the products shown across Daily Finds Hub.
         </p>
       </div>
 
@@ -446,6 +510,83 @@ export function ProductManager() {
           />
         </div>
 
+        <div className="border-t border-[var(--border)] pt-6">
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">
+              Product Images
+            </h2>
+
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              Upload product images to Cloudinary. The first image is primary by
+              default.
+            </p>
+          </div>
+
+          <ImageUploader type="products" onUpload={addImage} />
+
+          {images.length > 0 && (
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {images.map((image, index) => (
+                <div
+                  key={image.publicId}
+                  className="border border-[var(--border)] bg-[var(--surface)] p-3"
+                >
+                  <div className="relative aspect-square overflow-hidden bg-[var(--surface-muted)]">
+                    <Image
+                      src={image.url}
+                      alt={image.altText}
+                      fill
+                      className="h-full w-full object-cover"
+                    />
+
+                    {image.isPrimary && (
+                      <span className="absolute left-3 top-3 bg-[var(--accent)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                        Primary
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="mb-2 block text-xs font-medium text-[var(--text-primary)]">
+                      Alt text
+                    </label>
+
+                    <input
+                      type="text"
+                      value={image.altText}
+                      maxLength={200}
+                      onChange={(event) =>
+                        updateImageAltText(index, event.target.value)
+                      }
+                      className="w-full border border-[var(--border-strong)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                    />
+                  </div>
+
+                  <div className="mt-3 flex gap-2">
+                    {!image.isPrimary && (
+                      <button
+                        type="button"
+                        onClick={() => setPrimaryImage(index)}
+                        className="border border-[var(--border-strong)] px-3 py-2 text-xs font-medium text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                      >
+                        Set Primary
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => removePendingImage(index)}
+                      className="border border-red-300 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="grid gap-3 border-t border-[var(--border)] pt-6 sm:grid-cols-3">
           <Checkbox
             label="Featured"
@@ -517,15 +658,10 @@ export function ProductManager() {
               <thead className="border-b border-[var(--border)] bg-[var(--surface-muted)]">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium">Product</th>
-
                   <th className="px-4 py-3 text-left font-medium">Category</th>
-
                   <th className="px-4 py-3 text-left font-medium">Price</th>
-
                   <th className="px-4 py-3 text-left font-medium">Rating</th>
-
                   <th className="px-4 py-3 text-left font-medium">Status</th>
-
                   <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>

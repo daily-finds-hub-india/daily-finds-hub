@@ -17,6 +17,8 @@ export default async function Home() {
         createdAt: 'desc'
       },
       take: 6
+      ,
+      include: { images: { orderBy: { displayOrder: 'asc' } } }
     }),
 
     prisma.product.findMany({
@@ -28,6 +30,8 @@ export default async function Home() {
         createdAt: 'desc'
       },
       take: 6
+      ,
+      include: { images: { orderBy: { displayOrder: 'asc' } } }
     }),
 
     prisma.category.findMany({

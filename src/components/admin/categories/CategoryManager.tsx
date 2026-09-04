@@ -1,6 +1,8 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import Image from 'next/image';
+import { ImageUploader } from '../ImageUploader';
 
 type Category = {
   id: string;
@@ -8,16 +10,28 @@ type Category = {
   slug: string;
   description: string;
   image: string;
+  imagePublicId: string | null;
+  images: CategoryImage[];
   isFeatured: boolean;
   _count?: {
     products: number;
   };
 };
 
+type CategoryImage = {
+  id?: string;
+  url: string;
+  publicId: string;
+  altText: string;
+  isPrimary: boolean;
+};
+
 type CategoryForm = {
   name: string;
   description: string;
   image: string;
+  imagePublicId: string;
+  images: CategoryImage[];
   isFeatured: boolean;
 };
 
@@ -25,6 +39,8 @@ const emptyForm: CategoryForm = {
   name: '',
   description: '',
   image: '',
+  imagePublicId: '',
+  images: [],
   isFeatured: false
 };
 
@@ -119,6 +135,20 @@ export function CategoryManager() {
       name: category.name,
       description: category.description,
       image: category.image,
+      imagePublicId: category.imagePublicId ?? '',
+      images:
+        category.images?.length > 0
+          ? category.images
+          : category.image && category.imagePublicId
+            ? [
+                {
+                  url: category.image,
+                  publicId: category.imagePublicId,
+                  altText: category.name,
+                  isPrimary: true
+                }
+              ]
+            : [],
       isFeatured: category.isFeatured
     });
 
@@ -142,6 +172,73 @@ export function CategoryManager() {
     }));
   }
 
+  function addImage(image: { url: string; publicId: string }) {
+    setForm((current) => {
+      const newImage: CategoryImage = {
+        url: image.url,
+        publicId: image.publicId,
+        altText: current.name.trim() || 'Category image',
+        isPrimary: current.images.length === 0
+      };
+
+      return {
+        ...current,
+        image: current.images.length === 0 ? image.url : current.image,
+        imagePublicId:
+          current.images.length === 0 ? image.publicId : current.imagePublicId,
+        images: [...current.images, newImage]
+      };
+    });
+  }
+
+  function removeImage(index: number) {
+    setForm((current) => {
+      const images = current.images.filter(
+        (_, imageIndex) => imageIndex !== index
+      );
+      const primaryImage = images.find((image) => image.isPrimary) ?? images[0];
+
+      return {
+        ...current,
+        image: primaryImage?.url ?? '',
+        imagePublicId: primaryImage?.publicId ?? '',
+        images: images.map((image, imageIndex) => ({
+          ...image,
+          isPrimary: primaryImage
+            ? image.publicId === primaryImage.publicId &&
+              imageIndex === images.indexOf(primaryImage)
+            : false
+        }))
+      };
+    });
+  }
+
+  function setPrimaryImage(index: number) {
+    setForm((current) => {
+      const images = current.images.map((image, imageIndex) => ({
+        ...image,
+        isPrimary: imageIndex === index
+      }));
+      const primaryImage = images[index];
+
+      return {
+        ...current,
+        image: primaryImage.url,
+        imagePublicId: primaryImage.publicId,
+        images
+      };
+    });
+  }
+
+  function updateImageAltText(index: number, altText: string) {
+    setForm((current) => ({
+      ...current,
+      images: current.images.map((image, imageIndex) =>
+        imageIndex === index ? { ...image, altText } : image
+      )
+    }));
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -153,6 +250,8 @@ export function CategoryManager() {
       name: form.name,
       description: form.description,
       image: form.image,
+      imagePublicId: form.imagePublicId || null,
+      images: form.images,
       isFeatured: form.isFeatured
     };
 
@@ -331,26 +430,83 @@ export function CategoryManager() {
             </div>
 
             <div>
-              <label
-                htmlFor="category-image"
-                className="mb-2 block text-sm font-medium text-[var(--text-primary)]"
-              >
-                Image URL
+              <label className="mb-2 block text-sm font-medium text-[var(--text-primary)]">
+                Category image
               </label>
 
-              <input
-                id="category-image"
-                type="url"
-                maxLength={500}
-                value={form.image}
-                onChange={(event) => updateForm('image', event.target.value)}
-                placeholder="https://..."
-                className="w-full border border-[var(--border-strong)] bg-transparent px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--accent)]"
-              />
+              <ImageUploader type="categories" onUpload={addImage} />
 
-              <p className="mt-2 text-xs text-[var(--text-muted)]">
-                Cloudinary uploads will replace this manual URL field later.
-              </p>
+              {form.images.length > 0 ? (
+                <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {form.images.map((image, index) => (
+                    <div
+                      key={image.id ?? image.publicId}
+                      className="border border-[var(--border)] bg-[var(--surface)] p-3"
+                    >
+                      <div className="relative aspect-square overflow-hidden bg-[var(--surface-muted)]">
+                        <Image
+                          src={image.url}
+                          alt={image.altText}
+                          fill
+                          className="object-cover"
+                        />
+
+                        {image.isPrimary ? (
+                          <span className="absolute left-3 top-3 bg-[var(--accent)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                            Primary
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <div className="mt-3">
+                        <label className="mb-2 block text-xs font-medium text-[var(--text-primary)]">
+                          Alt text
+                        </label>
+
+                        <input
+                          type="text"
+                          value={image.altText}
+                          maxLength={200}
+                          onChange={(event) =>
+                            updateImageAltText(index, event.target.value)
+                          }
+                          className="w-full border border-[var(--border-strong)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                        />
+                      </div>
+
+                      <div className="mt-3 flex gap-2">
+                        {!image.isPrimary ? (
+                          <button
+                            type="button"
+                            onClick={() => setPrimaryImage(index)}
+                            className="border border-[var(--border-strong)] px-3 py-2 text-xs font-medium text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                          >
+                            Set Primary
+                          </button>
+                        ) : null}
+
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="border border-red-300 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : form.image ? (
+                <div className="mt-4">
+                  <Image
+                    src={form.image}
+                    alt="Category preview"
+                    width={128}
+                    height={128}
+                    className="h-32 w-32 rounded-lg border border-[var(--border)] object-cover"
+                  />
+                </div>
+              ) : null}
             </div>
 
             <label className="flex items-center gap-3">
@@ -445,15 +601,31 @@ export function CategoryManager() {
                     className="border-b border-[var(--border)] last:border-b-0"
                   >
                     <td className="px-6 py-4">
-                      <p className="font-medium text-[var(--text-primary)]">
-                        {category.name}
-                      </p>
+                      <div className="flex items-center gap-3">
+                        {category.image ? (
+                          <Image
+                            src={category.image}
+                            alt={category.name}
+                            width={48}
+                            height={48}
+                            className="h-12 w-12 rounded-md border border-[var(--border)] object-cover"
+                          />
+                        ) : (
+                          <div className="h-12 w-12 rounded-md border border-[var(--border)] bg-[var(--surface-muted)]" />
+                        )}
 
-                      {category.description ? (
-                        <p className="mt-1 max-w-xs truncate text-xs text-[var(--text-muted)]">
-                          {category.description}
-                        </p>
-                      ) : null}
+                        <div>
+                          <p className="font-medium text-[var(--text-primary)]">
+                            {category.name}
+                          </p>
+
+                          {category.description ? (
+                            <p className="mt-1 max-w-xs truncate text-xs text-[var(--text-muted)]">
+                              {category.description}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
                     </td>
 
                     <td className="px-6 py-4 text-[var(--text-secondary)]">

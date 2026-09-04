@@ -41,6 +41,9 @@ export async function GET() {
             slug: true
           }
         },
+        images: {
+          orderBy: [{ isPrimary: 'desc' }, { displayOrder: 'asc' }]
+        },
         _count: {
           select: {
             images: true
@@ -166,7 +169,16 @@ export async function POST(request) {
         asin: data.asin,
         isFeatured: data.isFeatured,
         isTrending: data.isTrending,
-        isPublished: data.isPublished
+        isPublished: data.isPublished,
+        images: {
+          create: data.images.map((image, index) => ({
+            url: image.url,
+            publicId: image.publicId,
+            altText: image.altText,
+            isPrimary: image.isPrimary,
+            displayOrder: index
+          }))
+        }
       },
       include: {
         category: {

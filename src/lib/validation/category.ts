@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+const categoryImagesSchema = z.array(
+  z.object({
+    url: z.string().trim().url('Image URL must be valid.'),
+    publicId: z.string().trim().min(1, 'Image public ID is required.'),
+    altText: z.string().trim().max(200, 'Alt text is too long.'),
+    isPrimary: z.boolean()
+  })
+);
+
 export const categoryCreateSchema = z.object({
   name: z
     .string()
@@ -14,8 +23,15 @@ export const categoryCreateSchema = z.object({
     .default(''),
 
   image: z.string().trim().max(500, 'Image URL is too long.').default(''),
-
-  isFeatured: z.boolean().default(false)
+  imagePublicId: z
+    .string()
+    .trim()
+    .max(300, 'Image public ID is too long.')
+    .nullable()
+    .optional()
+    .default(null),
+  isFeatured: z.boolean().default(false),
+  images: categoryImagesSchema.default([])
 });
 
 export const categoryUpdateSchema = categoryCreateSchema;

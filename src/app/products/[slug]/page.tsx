@@ -17,7 +17,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await prisma.product.findUnique({
     where: {
       slug
-    }
+    },
+    include: { images: { orderBy: { displayOrder: 'asc' } } }
   });
 
   if (!product || !product.isPublished) {
@@ -39,7 +40,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     asin: product.asin,
     isFeatured: product.isFeatured,
     isTrending: product.isTrending,
-    isPublished: product.isPublished
+    isPublished: product.isPublished,
+    images: product.images
   };
 
   return (

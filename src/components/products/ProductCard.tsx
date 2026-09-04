@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -16,6 +17,13 @@ type DatabaseProduct = {
   isFeatured: boolean;
   isTrending: boolean;
   isPublished: boolean;
+  images?: ProductImage[];
+};
+
+type ProductImage = {
+  url: string;
+  altText: string;
+  isPrimary: boolean;
 };
 
 type LegacyProduct = {
@@ -46,14 +54,27 @@ export function ProductCard({ product }: ProductCardProps) {
   const price = isDatabaseProduct
     ? product.price
     : (product.price?.amount ?? null);
+  const image = isDatabaseProduct
+    ? product.images?.find((item) => item.isPrimary) ?? product.images?.[0]
+    : product.image;
 
   return (
     <article className="group">
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-muted)]">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-1/2 w-1/2 border border-[var(--border-strong)] bg-[var(--surface)] transition-transform duration-500 group-hover:scale-105" />
-          </div>
+          {image ? (
+            <Image
+              src={typeof image === 'string' ? image : image.url}
+              alt={typeof image === 'string' ? product.name : image.altText}
+              fill
+              sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-1/2 w-1/2 border border-[var(--border-strong)] bg-[var(--surface)] transition-transform duration-500 group-hover:scale-105" />
+            </div>
+          )}
 
           {isTrending && (
             <span className="absolute left-4 top-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight, Star } from 'lucide-react';
 
@@ -17,6 +18,13 @@ type Product = {
   isFeatured: boolean;
   isTrending: boolean;
   isPublished: boolean;
+  images?: ProductImage[];
+};
+
+type ProductImage = {
+  url: string;
+  altText: string;
+  isPrimary: boolean;
 };
 
 interface ProductDetailsProps {
@@ -24,12 +32,25 @@ interface ProductDetailsProps {
 }
 
 export function ProductDetails({ product }: ProductDetailsProps) {
+  const image = product.images?.find((item) => item.isPrimary) ?? product.images?.[0];
+
   return (
     <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-24">
       <div className="relative aspect-square overflow-hidden rounded-[var(--radius-lg)] bg-[var(--surface-muted)]">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="h-[48%] w-[48%] border border-[var(--border-strong)] bg-[var(--surface)] shadow-[0_24px_60px_rgba(0,0,0,0.12)]" />
-        </div>
+        {image ? (
+          <Image
+            src={image.url}
+            alt={image.altText || product.name}
+            fill
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="object-cover"
+            priority
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-[48%] w-[48%] border border-[var(--border-strong)] bg-[var(--surface)] shadow-[0_24px_60px_rgba(0,0,0,0.12)]" />
+          </div>
+        )}
 
         {product.isTrending && (
           <span className="absolute left-5 top-5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
