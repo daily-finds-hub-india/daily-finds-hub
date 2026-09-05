@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { UploadCloud, LoaderCircle, AlertCircle } from 'lucide-react';
 
 interface UploadedImage {
   url: string;
@@ -112,15 +113,24 @@ export function ImageUploader({ type, onUpload }: ImageUploaderProps) {
         type="button"
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
-        className="border border-[var(--border-strong)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-xl border border-[var(--border-strong)] bg-[var(--surface-muted)] px-4 py-2.5 text-xs font-semibold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {uploading ? 'Uploading...' : 'Upload image'}
+        {uploading ? (
+          <LoaderCircle size={15} className="animate-spin" />
+        ) : (
+          <UploadCloud size={15} strokeWidth={2} />
+        )}
+        <span>{uploading ? 'Uploading image...' : 'Upload Image via Cloudinary'}</span>
       </button>
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-red-500">
+          <AlertCircle size={13} /> {error}
+        </p>
+      )}
 
-      <p className="mt-2 text-xs text-[var(--text-muted)]">
-        JPG, PNG, WebP or AVIF · Maximum 5MB
+      <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">
+        JPG, PNG, WebP or AVIF · Maximum 5MB · Auto-optimized
       </p>
     </div>
   );

@@ -66,10 +66,10 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 type="button"
                 onClick={() => updateFilter('category', category.id)}
                 className={[
-                  'shrink-0 border px-4 py-2 text-sm transition-colors duration-200',
+                  'shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200 shadow-xs',
                   isActive
-                    ? 'border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--background)]'
-                    : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
+                    ? 'border-[var(--accent)] bg-[var(--accent)] text-slate-950 font-bold scale-[1.02]'
+                    : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
                 ].join(' ')}
               >
                 {category.name}

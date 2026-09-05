@@ -23,15 +23,18 @@ export default async function CategoriesPage() {
           />
 
           {categories.length > 0 ? (
-            <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {categories.map((category) => (
                 <CategoryCard key={category.id} category={category} />
               ))}
             </div>
           ) : (
-            <div className="mt-14">
-              <p className="border-t border-[var(--border)] py-16 text-sm text-[var(--text-secondary)]">
-                Categories are being prepared. Check back soon.
+            <div className="mt-12 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-12 text-center">
+              <p className="text-base font-semibold text-[var(--text-primary)]">
+                Categories are being prepared.
+              </p>
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                Check back soon as we curate new product areas.
               </p>
             </div>
           )}

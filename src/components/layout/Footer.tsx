@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
 
 import { Container } from '@/components/layout/Container';
+import { BrandMark } from '@/components/layout/BrandMark';
 
 const discoverLinks = [
   { label: 'Products', href: '/products' },
@@ -20,34 +20,20 @@ const legalLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-[var(--border)] bg-[var(--surface)]">
+    <footer className="site-footer border-t border-[var(--border)]">
       <Container>
-        <div className="grid gap-12 py-14 sm:py-16 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10 lg:py-20">
-          {/* Brand */}
+        <div className="grid gap-10 py-12 sm:py-16 lg:grid-cols-[1.45fr_1fr_1fr_1fr] lg:gap-8">
           <div className="max-w-sm">
-            <Link
-              href="/"
-              className="group inline-block"
-              aria-label="Daily Finds Hub home"
-            >
-              <span className="block text-base font-bold tracking-[-0.03em] text-[var(--text-primary)]">
-                Daily Finds
-              </span>
+            <BrandMark />
 
-              <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)] transition-colors group-hover:text-[var(--accent)]">
-                Hub India
-              </span>
-            </Link>
-
-            <p className="mt-6 max-w-xs text-sm leading-6 text-[var(--text-secondary)]">
-              Useful gadgets, clever products, and interesting finds worth
-              discovering.
+            <p className="mt-6 max-w-xs text-sm leading-6 text-[color-mix(in_srgb,var(--background)_68%,transparent)]">
+              A considered collection of useful products, with context before
+              the next click.
             </p>
           </div>
 
-          {/* Discover */}
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--signal)]">
               Discover
             </h2>
 
@@ -57,7 +43,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
+                      className="text-sm text-[color-mix(in_srgb,var(--background)_72%,transparent)] transition-colors hover:text-[var(--signal)]"
                     >
                       {link.label}
                     </Link>
@@ -67,9 +53,8 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* Company */}
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--signal)]">
               Company
             </h2>
 
@@ -79,7 +64,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
+                      className="text-sm text-[color-mix(in_srgb,var(--background)_72%,transparent)] transition-colors hover:text-[var(--signal)]"
                     >
                       {link.label}
                     </Link>
@@ -89,9 +74,8 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* Legal */}
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--signal)]">
               Legal
             </h2>
 
@@ -101,17 +85,9 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="group inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
+                      className="text-sm text-[color-mix(in_srgb,var(--background)_72%,transparent)] transition-colors hover:text-[var(--signal)]"
                     >
                       {link.label}
-
-                      {link.href === '/disclosure' && (
-                        <ArrowUpRight
-                          size={13}
-                          strokeWidth={1.7}
-                          className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                        />
-                      )}
                     </Link>
                   </li>
                 ))}
@@ -120,14 +96,13 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="flex flex-col gap-3 border-t border-[var(--border)] py-6 text-xs text-[var(--text-muted)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-t border-[color-mix(in_srgb,var(--background)_20%,transparent)] py-6 text-xs text-[color-mix(in_srgb,var(--background)_55%,transparent)] sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {new Date().getFullYear()} Daily Finds Hub India. All rights
             reserved.
           </p>
 
-          <p>Discover better. Every day.</p>
+          <p>As an Amazon Associate, we earn from qualifying purchases.</p>
         </div>
       </Container>
     </footer>

@@ -16,17 +16,17 @@ export function AdminPageHeader({
   return (
     <div className="flex flex-col justify-between gap-5 border-b border-[var(--border)] pb-8 sm:flex-row sm:items-end">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent)]">
           {eyebrow}
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
+        </span>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">
           {title}
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-secondary)]">
           {description}
         </p>
       </div>
-      {action}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }

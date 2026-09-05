@@ -6,6 +6,7 @@ import { ArrowUpRight, X } from 'lucide-react';
 
 import { IconButton } from '@/components/ui/IconButton';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { BrandMark } from '@/components/layout/BrandMark';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -54,20 +55,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
       aria-label="Navigation menu"
     >
       <div className="flex h-20 items-center justify-between border-b border-[var(--border)] px-5 sm:px-8">
-        <Link
-          href="/"
-          onClick={onClose}
-          className="group"
-          aria-label="Daily Finds Hub home"
-        >
-          <span className="block text-base font-bold leading-none tracking-[-0.03em] text-[var(--text-primary)]">
-            Daily Finds
-          </span>
-
-          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)] transition-colors group-hover:text-[var(--accent)]">
-            Hub India
-          </span>
-        </Link>
+        <BrandMark />
 
         <IconButton label="Close navigation menu" onClick={onClose}>
           <X size={21} strokeWidth={1.8} />

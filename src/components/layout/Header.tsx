@@ -5,6 +5,7 @@ import { Menu } from 'lucide-react';
 import Link from 'next/link';
 
 import { Container } from '@/components/layout/Container';
+import { BrandMark } from '@/components/layout/BrandMark';
 import { HeaderSearch } from '@/components/search/HeaderSearch';
 import { MobileMenu } from '@/components/layout/MobileMenu';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
@@ -56,37 +57,30 @@ export function Header() {
           scrolled && 'shadow-[var(--shadow-subtle)]'
         )}
       >
-        <Container className="flex h-18 items-center justify-between">
-          <Link
-            href="/"
-            className="group shrink-0"
-            aria-label="Daily Finds Hub home"
-          >
-            <span className="block text-base font-bold tracking-[-0.03em]">
-              Daily Finds
+        <Container className="flex h-[4.75rem] items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            <BrandMark />
+            <span className="hidden border-l border-[var(--border)] pl-6 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)] xl:block">
+              Useful things, considered
             </span>
-
-            <span className="block text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--text-muted)] transition-colors group-hover:text-[var(--accent)]">
-              Hub India
-            </span>
-          </Link>
+          </div>
 
           <nav
-            className="hidden items-center gap-8 lg:flex"
+            className="hidden items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1 shadow-xs md:flex"
             aria-label="Primary navigation"
           >
             {navigation.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                className="rounded-full px-4 py-1.5 text-xs font-semibold text-[var(--text-secondary)] transition-all duration-200 hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
               >
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <HeaderSearch
               isOpen={searchOpen}
               onOpen={openSearch}
@@ -97,7 +91,7 @@ export function Header() {
               <ThemeToggle />
             </div>
 
-            <div className="lg:hidden">
+            <div className="md:hidden">
               <IconButton
                 label="Open navigation menu"
                 onClick={() => setMenuOpen(true)}

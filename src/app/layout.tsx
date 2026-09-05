@@ -1,12 +1,18 @@
 import type { Metadata } from 'next';
-import { DM_Sans } from 'next/font/google';
+import { Archivo, IBM_Plex_Sans } from 'next/font/google';
 
 import { NavigationScroll } from '@/components/layout/NavigationScroll';
 import { SiteChrome } from '@/components/layout/SiteChrome';
 import './globals.css';
 
-const dmSans = DM_Sans({
-  variable: '--font-dm-sans',
+const ibmPlex = IBM_Plex_Sans({
+  variable: '--font-ibm-plex',
+  subsets: ['latin'],
+  display: 'swap'
+});
+
+const archivo = Archivo({
+  variable: '--font-archivo',
   subsets: ['latin'],
   display: 'swap'
 });
@@ -51,7 +57,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: themeScript }}
         />
       </head>
-      <body className={dmSans.variable}>
+      <body className={`${ibmPlex.variable} ${archivo.variable}`}>
         <SiteChrome>{children}</SiteChrome>
         <NavigationScroll />
       </body>

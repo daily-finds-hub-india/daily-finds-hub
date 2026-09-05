@@ -7,12 +7,17 @@ import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { EmptyState } from '@/components/ui/EmptyState';
 
+type CategoryImage = {
+  url: string;
+  isPrimary: boolean;
+};
+
 type Category = {
   id: string;
   name: string;
   slug: string;
   description: string;
-  image: string;
+  images: CategoryImage[];
   isFeatured: boolean;
 };
 

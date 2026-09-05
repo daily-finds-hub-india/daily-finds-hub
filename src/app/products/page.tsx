@@ -4,11 +4,13 @@ import { ProductGrid } from '@/components/products/ProductGrid';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { prisma } from '@/lib/prisma';
+import { getPublicProducts } from '@/lib/queries/public';
 
 interface ProductsPageProps {
   searchParams: Promise<{
     category?: string;
     sort?: string;
+    search?: string;
   }>;
 }
 
@@ -22,42 +24,10 @@ export default async function ProductsPage({
     select: { id: true, name: true }
   });
 
-  const sortOrder =
-    params.sort === 'newest'
-      ? [{ createdAt: 'desc' as const }]
-      : params.sort === 'oldest'
-        ? [{ createdAt: 'asc' as const }]
-        : params.sort === 'price-low'
-          ? [{ price: 'asc' as const }]
-          : params.sort === 'price-high'
-            ? [{ price: 'desc' as const }]
-            : params.sort === 'rating'
-              ? [{ rating: 'desc' as const }, { createdAt: 'desc' as const }]
-              : params.sort === 'reviews'
-                ? [
-                    { reviewCount: 'desc' as const },
-                    { createdAt: 'desc' as const }
-                  ]
-                : params.sort === 'trending'
-                  ? [
-                      { isTrending: 'desc' as const },
-                      { createdAt: 'desc' as const }
-                    ]
-                  : [
-                      { isFeatured: 'desc' as const },
-                      { createdAt: 'desc' as const }
-                    ];
-
-  const products = await prisma.product.findMany({
-    where: {
-      isPublished: true,
-      ...(params.category ? { categoryId: params.category } : {})
-    },
-    orderBy: sortOrder,
-    include: {
-      images: { orderBy: { displayOrder: 'asc' } },
-      _count: { select: { images: true } }
-    }
+  const products = await getPublicProducts({
+    categoryId: params.category,
+    sort: params.sort,
+    search: params.search
   });
 
   return (
@@ -65,9 +35,13 @@ export default async function ProductsPage({
       <Section>
         <Container>
           <SectionHeading
-            eyebrow="The collection"
-            title="All finds."
-            description="Browse useful gadgets, clever everyday products, and interesting things worth discovering."
+            eyebrow={params.search ? `Search results for "${params.search}"` : "The collection"}
+            title={params.search ? `Finds for "${params.search}"` : "All finds."}
+            description={
+              params.search
+                ? `Showing curated products matching "${params.search}".`
+                : "Browse useful gadgets, clever everyday products, and interesting things worth discovering."
+            }
           />
 
           <div className="mt-14">
@@ -75,9 +49,11 @@ export default async function ProductsPage({
             <ProductGrid
               products={products}
               emptyMessage={
-                params.category
-                  ? 'No published products match this category and sort.'
-                  : 'No published products are available yet.'
+                params.search
+                  ? `No published products matched "${params.search}". Try a different keyword.`
+                  : params.category
+                    ? 'No published products match this category and sort.'
+                    : 'No published products are available yet.'
               }
             />
           </div>

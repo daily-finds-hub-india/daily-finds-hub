@@ -8,13 +8,11 @@ datasource db {
 }
 
 model Category {
-  id            String   @id @default(cuid())
-  name          String   @unique
-  slug          String   @unique
-  description   String
-  image         String
-  imagePublicId String?
-  isFeatured    Boolean  @default(false)
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String
+  isFeatured  Boolean  @default(false)
 
   products Product[]
   images   CategoryImage[]
@@ -24,13 +22,13 @@ model Category {
 }
 
 model CategoryImage {
-  id          String   @id @default(cuid())
-  categoryId  String
-  url         String
-  publicId    String
-  altText     String
-  displayOrder Int     @default(0)
-  isPrimary   Boolean  @default(false)
+  id           String   @id @default(cuid())
+  categoryId   String
+  url          String
+  publicId     String
+  altText      String
+  displayOrder Int      @default(0)
+  isPrimary    Boolean  @default(false)
 
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 

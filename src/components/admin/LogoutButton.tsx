@@ -25,7 +25,7 @@ export function LogoutButton() {
       onClick={handleLogout}
       disabled={isLoggingOut}
       aria-busy={isLoggingOut}
-      className="inline-flex items-center gap-2 border border-[var(--border-strong)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:cursor-wait disabled:opacity-70"
+      className="admin-secondary inline-flex items-center gap-2 px-3 py-2 text-sm font-medium transition disabled:cursor-wait disabled:opacity-70"
     >
       {isLoggingOut ? (
         <LoaderCircle size={15} strokeWidth={1.8} className="animate-spin" />

@@ -1,44 +1,46 @@
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
 import { Container } from '@/components/layout/Container';
 
 export function DiscoveryCta() {
   return (
-    <section className="border-t border-[var(--border)]">
-      <Container className="py-20 sm:py-24 lg:py-32">
-        <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div className="max-w-3xl">
-            <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
-              Keep exploring
-            </p>
+    <section className="border-t border-[var(--border)] py-14 sm:py-20">
+      <Container>
+        <div className="relative overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-gradient-to-br from-[var(--surface)] via-[var(--surface-muted)] to-[var(--surface)] p-8 sm:p-12 lg:p-16 shadow-[var(--shadow-raised)]">
+          {/* Subtle Accent Glow */}
+          <div className="pointer-events-none absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-[var(--accent)]/15 blur-3xl" />
+          <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl" />
 
-            <h2 className="text-[clamp(2.5rem,5vw,5rem)] font-semibold leading-[0.95] tracking-[-0.05em] text-[var(--text-primary)]">
-              There&apos;s always
-              <br />
-              something worth finding.
-            </h2>
+          <div className="relative flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-bold text-[var(--accent-text)]">
+                <Sparkles size={13} strokeWidth={2.2} />
+                <span>Never Miss a Reel Find</span>
+              </div>
 
-            <p className="mt-6 max-w-xl text-base leading-7 text-[var(--text-secondary)] sm:text-lg sm:leading-8">
-              From clever kitchen tools to unexpected everyday gadgets, discover
-              products that make you stop and think, &ldquo;I actually need
-              that.&rdquo;
-            </p>
+              <h2 className="mt-4 text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--text-primary)]">
+                There&apos;s always something worth finding.
+              </h2>
+
+              <p className="mt-3 text-sm sm:text-base leading-relaxed text-[var(--text-secondary)]">
+                From clever kitchen organizers to viral desk gadgets, discover verified products that make daily life simpler, smarter, and more enjoyable.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto shrink-0">
+              <Link
+                href="/products"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-6 py-3.5 text-sm font-bold text-slate-950 shadow-xs transition-all duration-200 hover:bg-[var(--accent-hover)] hover:scale-105 active:scale-95"
+              >
+                <span>Browse Full Catalog</span>
+                <ArrowRight size={16} strokeWidth={2.4} />
+              </Link>
+            </div>
           </div>
-
-          <Link
-            href="/products"
-            className="group inline-flex h-14 w-14 items-center justify-center rounded-full border border-[var(--border-strong)] text-[var(--text-primary)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)] hover:text-[var(--accent)] lg:h-16 lg:w-16"
-            aria-label="Explore all products"
-          >
-            <ArrowUpRight
-              size={22}
-              strokeWidth={1.6}
-              className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-            />
-          </Link>
         </div>
       </Container>
     </section>
   );
 }
+

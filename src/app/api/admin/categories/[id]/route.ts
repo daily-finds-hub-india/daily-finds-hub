@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireApiAdmin } from '@/lib/auth/require-api-admin';
-import { cloudinary } from '@/lib/cloudinary';
 import { categoryUpdateSchema } from '@/lib/validation/category';
 
 function createSlug(name: string) {
@@ -99,8 +98,6 @@ export async function PUT(request: Request, { params }: RouteContext) {
 
     const data = result.data;
     const slug = createSlug(data.name);
-    const primaryImage =
-      data.images.find((image) => image.isPrimary) ?? data.images[0];
 
     if (!slug) {
       return NextResponse.json(
@@ -112,27 +109,48 @@ export async function PUT(request: Request, { params }: RouteContext) {
       );
     }
 
-    const existingCategory = await prisma.category.findFirst({
-      where: {
-        OR: [
-          {
-            name: {
-              equals: data.name,
-              mode: 'insensitive'
-            }
-          },
-          {
-            slug
-          }
-        ],
-        NOT: {
+    const [category, existingCategory] = await Promise.all([
+      prisma.category.findUnique({
+        where: {
           id
+        },
+        select: {
+          id: true
         }
-      },
-      select: {
-        id: true
-      }
-    });
+      }),
+
+      prisma.category.findFirst({
+        where: {
+          OR: [
+            {
+              name: {
+                equals: data.name,
+                mode: 'insensitive'
+              }
+            },
+            {
+              slug
+            }
+          ],
+          NOT: {
+            id
+          }
+        },
+        select: {
+          id: true
+        }
+      })
+    ]);
+
+    if (!category) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Category not found.'
+        },
+        { status: 404 }
+      );
+    }
 
     if (existingCategory) {
       return NextResponse.json(
@@ -144,25 +162,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
       );
     }
 
-    const existingCategoryRecord = await prisma.category.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        imagePublicId: true,
-        images: {
-          select: { publicId: true }
-        }
-      }
-    });
-
-    if (!existingCategoryRecord) {
-      return NextResponse.json(
-        { success: false, message: 'Category not found.' },
-        { status: 404 }
-      );
-    }
-
-    const category = await prisma.category.update({
+    const updatedCategory = await prisma.category.update({
       where: {
         id
       },
@@ -170,52 +170,23 @@ export async function PUT(request: Request, { params }: RouteContext) {
         name: data.name,
         slug,
         description: data.description,
-        image: primaryImage?.url ?? data.image,
-        imagePublicId: primaryImage?.publicId ?? data.imagePublicId ?? null,
-        isFeatured: data.isFeatured,
-        images: {
-          deleteMany: {},
-          create: data.images.map((image, index) => ({
-            url: image.url,
-            publicId: image.publicId,
-            altText: image.altText,
-            isPrimary: image.isPrimary || (!primaryImage && index === 0),
-            displayOrder: index
-          }))
-        }
+        isFeatured: data.isFeatured
       },
       include: {
         images: {
           orderBy: [{ isPrimary: 'desc' }, { displayOrder: 'asc' }]
+        },
+        _count: {
+          select: {
+            products: true
+          }
         }
       }
     });
 
-    const retainedPublicIds = new Set(
-      data.images.map((image) => image.publicId)
-    );
-    const previousPublicIds = [
-      ...existingCategoryRecord.images.map((image) => image.publicId),
-      existingCategoryRecord.imagePublicId
-    ].filter((publicId): publicId is string => publicId !== null);
-    const removedPublicIds = previousPublicIds.filter(
-      (publicId) => !retainedPublicIds.has(publicId)
-    );
-
-    if (removedPublicIds.length > 0) {
-      await Promise.all(
-        [...new Set(removedPublicIds)].map((publicId) =>
-          cloudinary.uploader.destroy(publicId, {
-            resource_type: 'image',
-            invalidate: true
-          })
-        )
-      );
-    }
-
     return NextResponse.json({
       success: true,
-      category
+      category: updatedCategory
     });
   } catch (error) {
     console.error('Failed to update category:', error);
@@ -246,7 +217,9 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       },
       include: {
         images: {
-          select: { publicId: true }
+          select: {
+            publicId: true
+          }
         },
         _count: {
           select: {
@@ -282,22 +255,6 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
         id
       }
     });
-
-    const publicIds = [
-      ...category.images.map((image) => image.publicId),
-      category.imagePublicId
-    ].filter((publicId): publicId is string => Boolean(publicId));
-
-    if (publicIds.length > 0) {
-      await Promise.all(
-        [...new Set(publicIds)].map((publicId) =>
-          cloudinary.uploader.destroy(publicId, {
-            resource_type: 'image',
-            invalidate: true
-          })
-        )
-      );
-    }
 
     return NextResponse.json({
       success: true,

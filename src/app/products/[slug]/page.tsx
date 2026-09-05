@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { Container } from '@/components/layout/Container';
 import { ProductDetails } from '@/components/products/ProductDetails';
 import { Section } from '@/components/ui/Section';
-import { prisma } from '@/lib/prisma';
+import { getPublicProductBySlug } from '@/lib/queries/public';
 
 interface ProductPageProps {
   params: Promise<{
@@ -14,14 +14,9 @@ interface ProductPageProps {
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: {
-      slug
-    },
-    include: { images: { orderBy: { displayOrder: 'asc' } } }
-  });
+  const product = await getPublicProductBySlug(slug);
 
-  if (!product || !product.isPublished) {
+  if (!product) {
     notFound();
   }
 

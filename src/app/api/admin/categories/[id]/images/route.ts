@@ -23,28 +23,43 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { response } = await requireApiAdmin();
-  if (response) return response;
+
+  if (response) {
+    return response;
+  }
 
   const { id } = await params;
 
   try {
     if (!(await getCategory(id))) {
       return NextResponse.json(
-        { success: false, message: 'Category not found.' },
+        {
+          success: false,
+          message: 'Category not found.'
+        },
         { status: 404 }
       );
     }
 
     const images = await prisma.categoryImage.findMany({
-      where: { categoryId: id },
+      where: {
+        categoryId: id
+      },
       orderBy: [{ isPrimary: 'desc' }, { displayOrder: 'asc' }]
     });
 
-    return NextResponse.json({ success: true, images });
+    return NextResponse.json({
+      success: true,
+      images
+    });
   } catch (error) {
     console.error('Failed to fetch category images:', error);
+
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch category images.' },
+      {
+        success: false,
+        message: 'Failed to fetch category images.'
+      },
       { status: 500 }
     );
   }
@@ -55,22 +70,39 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { response } = await requireApiAdmin();
-  if (response) return response;
+
+  if (response) {
+    return response;
+  }
 
   const { id } = await params;
 
   try {
-    const body = await request.json();
-    const url = typeof body?.url === 'string' ? body.url.trim() : '';
+    const body: unknown = await request.json();
+
+    const url =
+      typeof (body as { url?: unknown })?.url === 'string'
+        ? (body as { url: string }).url.trim()
+        : '';
+
     const publicId =
-      typeof body?.publicId === 'string' ? body.publicId.trim() : '';
+      typeof (body as { publicId?: unknown })?.publicId === 'string'
+        ? (body as { publicId: string }).publicId.trim()
+        : '';
+
     const altText =
-      typeof body?.altText === 'string' ? body.altText.trim() : '';
-    const isPrimary = body?.isPrimary === true;
+      typeof (body as { altText?: unknown })?.altText === 'string'
+        ? (body as { altText: string }).altText.trim()
+        : '';
+
+    const isPrimary = (body as { isPrimary?: unknown })?.isPrimary === true;
 
     if (!url || !publicId) {
       return NextResponse.json(
-        { success: false, message: 'Image URL and public ID are required.' },
+        {
+          success: false,
+          message: 'Image URL and public ID are required.'
+        },
         { status: 400 }
       );
     }
@@ -80,39 +112,55 @@ export async function POST(
       !url.startsWith('https://res.cloudinary.com/')
     ) {
       return NextResponse.json(
-        { success: false, message: 'Invalid Cloudinary image.' },
+        {
+          success: false,
+          message: 'Invalid Cloudinary image.'
+        },
         { status: 400 }
       );
     }
 
     if (altText.length > MAX_ALT_TEXT_LENGTH) {
       return NextResponse.json(
-        { success: false, message: 'Alt text is too long.' },
+        {
+          success: false,
+          message: 'Alt text is too long.'
+        },
         { status: 400 }
       );
     }
 
     if (!(await getCategory(id))) {
       return NextResponse.json(
-        { success: false, message: 'Category not found.' },
+        {
+          success: false,
+          message: 'Category not found.'
+        },
         { status: 404 }
       );
     }
 
     const imageCount = await prisma.categoryImage.count({
-      where: { categoryId: id }
+      where: {
+        categoryId: id
+      }
     });
+
     const shouldBePrimary = isPrimary || imageCount === 0;
 
     const image = await prisma.$transaction(async (transaction) => {
       if (shouldBePrimary) {
         await transaction.categoryImage.updateMany({
-          where: { categoryId: id },
-          data: { isPrimary: false }
+          where: {
+            categoryId: id
+          },
+          data: {
+            isPrimary: false
+          }
         });
       }
 
-      const createdImage = await transaction.categoryImage.create({
+      return transaction.categoryImage.create({
         data: {
           categoryId: id,
           url,
@@ -122,22 +170,23 @@ export async function POST(
           displayOrder: imageCount
         }
       });
-
-      if (shouldBePrimary) {
-        await transaction.category.update({
-          where: { id },
-          data: { image: url, imagePublicId: publicId }
-        });
-      }
-
-      return createdImage;
     });
 
-    return NextResponse.json({ success: true, image }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        image
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Failed to save category image:', error);
+
     return NextResponse.json(
-      { success: false, message: 'Failed to save category image.' },
+      {
+        success: false,
+        message: 'Failed to save category image.'
+      },
       { status: 500 }
     );
   }
@@ -148,39 +197,63 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { response } = await requireApiAdmin();
-  if (response) return response;
+
+  if (response) {
+    return response;
+  }
 
   const { id } = await params;
 
   try {
-    const body = await request.json();
+    const body: unknown = await request.json();
+
     const imageId =
-      typeof body?.imageId === 'string' ? body.imageId.trim() : '';
-    const hasAltText = typeof body?.altText === 'string';
-    const altText = hasAltText ? body.altText.trim() : '';
-    const makePrimary = body?.isPrimary === true;
+      typeof (body as { imageId?: unknown })?.imageId === 'string'
+        ? (body as { imageId: string }).imageId.trim()
+        : '';
+
+    const hasAltText =
+      typeof (body as { altText?: unknown })?.altText === 'string';
+
+    const altText = hasAltText
+      ? (body as { altText: string }).altText.trim()
+      : '';
+
+    const makePrimary = (body as { isPrimary?: unknown })?.isPrimary === true;
 
     if (!imageId) {
       return NextResponse.json(
-        { success: false, message: 'Image ID is required.' },
+        {
+          success: false,
+          message: 'Image ID is required.'
+        },
         { status: 400 }
       );
     }
 
     if (hasAltText && altText.length > MAX_ALT_TEXT_LENGTH) {
       return NextResponse.json(
-        { success: false, message: 'Alt text is too long.' },
+        {
+          success: false,
+          message: 'Alt text is too long.'
+        },
         { status: 400 }
       );
     }
 
     const image = await prisma.categoryImage.findFirst({
-      where: { id: imageId, categoryId: id }
+      where: {
+        id: imageId,
+        categoryId: id
+      }
     });
 
     if (!image) {
       return NextResponse.json(
-        { success: false, message: 'Category image not found.' },
+        {
+          success: false,
+          message: 'Category image not found.'
+        },
         { status: 404 }
       );
     }
@@ -188,34 +261,38 @@ export async function PUT(
     const updatedImage = await prisma.$transaction(async (transaction) => {
       if (makePrimary) {
         await transaction.categoryImage.updateMany({
-          where: { categoryId: id },
-          data: { isPrimary: false }
+          where: {
+            categoryId: id
+          },
+          data: {
+            isPrimary: false
+          }
         });
       }
 
-      const nextImage = await transaction.categoryImage.update({
-        where: { id: imageId },
+      return transaction.categoryImage.update({
+        where: {
+          id: imageId
+        },
         data: {
           ...(makePrimary ? { isPrimary: true } : {}),
           ...(hasAltText ? { altText } : {})
         }
       });
-
-      if (makePrimary) {
-        await transaction.category.update({
-          where: { id },
-          data: { image: nextImage.url, imagePublicId: nextImage.publicId }
-        });
-      }
-
-      return nextImage;
     });
 
-    return NextResponse.json({ success: true, image: updatedImage });
+    return NextResponse.json({
+      success: true,
+      image: updatedImage
+    });
   } catch (error) {
     console.error('Failed to update category image:', error);
+
     return NextResponse.json(
-      { success: false, message: 'Failed to update category image.' },
+      {
+        success: false,
+        message: 'Failed to update category image.'
+      },
       { status: 500 }
     );
   }
@@ -226,34 +303,53 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { response } = await requireApiAdmin();
-  if (response) return response;
+
+  if (response) {
+    return response;
+  }
 
   const { id } = await params;
 
   try {
-    const body = await request.json();
+    const body: unknown = await request.json();
+
     const imageId =
-      typeof body?.imageId === 'string' ? body.imageId.trim() : '';
+      typeof (body as { imageId?: unknown })?.imageId === 'string'
+        ? (body as { imageId: string }).imageId.trim()
+        : '';
 
     if (!imageId) {
       return NextResponse.json(
-        { success: false, message: 'Image ID is required.' },
+        {
+          success: false,
+          message: 'Image ID is required.'
+        },
         { status: 400 }
       );
     }
 
     const image = await prisma.categoryImage.findFirst({
-      where: { id: imageId, categoryId: id }
+      where: {
+        id: imageId,
+        categoryId: id
+      }
     });
 
     if (!image) {
       return NextResponse.json(
-        { success: false, message: 'Category image not found.' },
+        {
+          success: false,
+          message: 'Category image not found.'
+        },
         { status: 404 }
       );
     }
 
-    await prisma.categoryImage.delete({ where: { id: imageId } });
+    await prisma.categoryImage.delete({
+      where: {
+        id: imageId
+      }
+    });
 
     try {
       await cloudinary.uploader.destroy(image.publicId, {
@@ -266,24 +362,24 @@ export async function DELETE(
 
     if (image.isPrimary) {
       const replacement = await prisma.categoryImage.findFirst({
-        where: { categoryId: id },
-        orderBy: { displayOrder: 'asc' }
+        where: {
+          categoryId: id
+        },
+        orderBy: {
+          displayOrder: 'asc'
+        }
       });
 
       if (replacement) {
         await prisma.categoryImage.update({
-          where: { id: replacement.id },
-          data: { isPrimary: true }
+          where: {
+            id: replacement.id
+          },
+          data: {
+            isPrimary: true
+          }
         });
       }
-
-      await prisma.category.update({
-        where: { id },
-        data: {
-          image: replacement?.url ?? '',
-          imagePublicId: replacement?.publicId ?? null
-        }
-      });
     }
 
     return NextResponse.json({
@@ -292,8 +388,12 @@ export async function DELETE(
     });
   } catch (error) {
     console.error('Failed to delete category image:', error);
+
     return NextResponse.json(
-      { success: false, message: 'Failed to delete category image.' },
+      {
+        success: false,
+        message: 'Failed to delete category image.'
+      },
       { status: 500 }
     );
   }

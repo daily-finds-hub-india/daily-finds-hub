@@ -155,11 +155,11 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
             <Search size={18} strokeWidth={1.8} />
           </button>
         ) : (
-          <div className="flex h-10 w-full items-center border-b border-[var(--text-primary)] max-sm:h-11">
+          <div className="flex h-10 w-full items-center border-b-2 border-[var(--accent)] max-sm:h-11">
             <Search
               size={17}
-              strokeWidth={1.8}
-              className="mr-2 shrink-0 text-[var(--text-muted)]"
+              strokeWidth={2}
+              className="mr-2 shrink-0 text-[var(--accent)]"
             />
 
             <input
@@ -167,25 +167,26 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search finds..."
+              placeholder="Search gadgets, kitchen & home finds..."
               aria-label="Search products and categories"
-              className="min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
             />
 
             <button
               type="button"
               onClick={handleClose}
               aria-label="Close search"
-              className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
+              className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
             >
-              <X size={16} strokeWidth={1.8} />
+              <X size={16} strokeWidth={2} />
             </button>
           </div>
         )}
       </div>
 
       {isOpen && normalizedQuery && (
-        <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(26rem,80vw)] overflow-hidden border border-[var(--border)] bg-[var(--surface)] shadow-[0_16px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.3)] max-sm:left-0 max-sm:right-0 max-sm:top-[calc(100%+0.75rem)] max-sm:w-full">
+        <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(26rem,80vw)] overflow-hidden rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] shadow-[var(--shadow-raised)] max-sm:left-0 max-sm:right-0 max-sm:top-[calc(100%+0.75rem)] max-sm:w-full">
+
           {!hasResults ? (
             <div className="px-5 py-6">
               <p className="text-sm font-medium text-[var(--text-primary)]">

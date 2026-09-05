@@ -48,7 +48,13 @@ export default async function Home() {
 
   return (
     <main>
-      <Hero />
+      <Hero
+        image={
+          featuredProducts[0]?.images.find((image) => image.isPrimary) ??
+          featuredProducts[0]?.images[0]
+        }
+        featuredProduct={featuredProducts[0]}
+      />
 
       <FeaturedProducts products={featuredProducts} />
 

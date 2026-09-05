@@ -1,10 +1,13 @@
 import { notFound } from 'next/navigation';
 
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+
 import { Container } from '@/components/layout/Container';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { prisma } from '@/lib/prisma';
+import { getPublicCategoryBySlug } from '@/lib/queries/public';
 
 interface CategoryPageProps {
   params: Promise<{
@@ -15,19 +18,7 @@ interface CategoryPageProps {
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
 
-  const category = await prisma.category.findUnique({
-    where: { slug },
-    include: {
-      products: {
-        where: { isPublished: true },
-        orderBy: { createdAt: 'desc' },
-        include: {
-          images: { orderBy: { displayOrder: 'asc' } },
-          _count: { select: { images: true } }
-        }
-      }
-    }
-  });
+  const category = await getPublicCategoryBySlug(slug);
 
   if (!category) {
     notFound();
@@ -37,16 +28,28 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     <main>
       <Section>
         <Container>
+          <Link
+            href="/category"
+            className="group mb-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] transition-colors hover:text-[var(--accent)]"
+          >
+            <ArrowLeft
+              size={14}
+              strokeWidth={2}
+              className="transition-transform duration-200 group-hover:-translate-x-1"
+            />
+            <span>All Categories</span>
+          </Link>
+
           <SectionHeading
-            eyebrow="Category"
+            eyebrow="Curated Category"
             title={category.name}
-            description={category.description ?? ''}
+            description={category.description ?? 'Explore verified products and useful finds in this collection.'}
           />
 
-          <div className="mt-14">
+          <div className="mt-12">
             <ProductGrid
               products={category.products}
-              emptyMessage="We're still discovering finds for this category."
+              emptyMessage="We're currently discovering new finds for this category. Check back soon!"
             />
           </div>
         </Container>
