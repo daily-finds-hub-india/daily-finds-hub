@@ -12,7 +12,6 @@ interface SiteChromeProps {
 
 export function SiteChrome({ children }: SiteChromeProps) {
   const pathname = usePathname();
-
   if (pathname.startsWith('/admin')) {
     return children;
   }

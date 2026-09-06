@@ -2,34 +2,18 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 import { Container } from '@/components/layout/Container';
-import { ProductCard } from '@/components/products/ProductCard';
+import { ProductGrid } from '@/components/products/ProductGrid';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { EmptyState } from '@/components/ui/EmptyState';
 
-type Product = {
-  id: string;
-  name: string;
-  slug: string;
-  shortDescription: string;
-  description: string;
-  categoryId: string;
-  price: unknown;
-  originalPrice: unknown;
-  rating: unknown;
-  reviewCount: number;
-  amazonUrl: string | null;
-  asin: string | null;
-  isFeatured: boolean;
-  isTrending: boolean;
-  isPublished: boolean;
-};
+import type { Product } from '@/types/product';
 
-interface FeaturedProductsProps {
+interface FeaturedSectionProps {
   products: Product[];
 }
 
-export function FeaturedProducts({ products }: FeaturedProductsProps) {
+export function FeaturedSection({ products }: FeaturedSectionProps) {
   const featuredProducts = products.slice(0, 3);
 
   if (featuredProducts.length === 0) {
@@ -49,7 +33,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
   return (
     <Section>
       <Container>
-        <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-5 sm:gap-8 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
             eyebrow="Curated for you"
             title="Today's finds"
@@ -58,21 +42,24 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
 
           <Link
             href="/products"
-            className="group inline-flex shrink-0 items-center gap-2 self-start border-b border-[var(--border-strong)] pb-1.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] sm:self-auto"
+            className="group inline-flex min-h-9 w-fit shrink-0 items-center gap-2 border-b border-[var(--border-strong)] pb-1.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
-            View all
+            <span>View all</span>
+
             <ArrowRight
               size={16}
               strokeWidth={1.8}
               className="transition-transform duration-200 group-hover:translate-x-1"
+              aria-hidden="true"
             />
           </Link>
         </div>
 
-        <div className="mt-12 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        <div className="mt-8 sm:mt-10 lg:mt-12">
+          <ProductGrid
+            products={featuredProducts}
+            className="lg:grid-cols-3 xl:grid-cols-3"
+          />
         </div>
       </Container>
     </Section>

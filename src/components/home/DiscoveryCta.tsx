@@ -8,7 +8,6 @@ export function DiscoveryCta() {
     <section className="border-t border-[var(--border)] py-14 sm:py-20">
       <Container>
         <div className="relative overflow-hidden rounded-3xl border border-[var(--border-strong)] bg-gradient-to-br from-[var(--surface)] via-[var(--surface-muted)] to-[var(--surface)] p-8 sm:p-12 lg:p-16 shadow-[var(--shadow-raised)]">
-          {/* Subtle Accent Glow */}
           <div className="pointer-events-none absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-[var(--accent)]/15 blur-3xl" />
           <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl" />
 
@@ -24,7 +23,9 @@ export function DiscoveryCta() {
               </h2>
 
               <p className="mt-3 text-sm sm:text-base leading-relaxed text-[var(--text-secondary)]">
-                From clever kitchen organizers to viral desk gadgets, discover verified products that make daily life simpler, smarter, and more enjoyable.
+                From clever kitchen organizers to viral desk gadgets, discover
+                verified products that make daily life simpler, smarter, and
+                more enjoyable.
               </p>
             </div>
 
@@ -43,4 +44,3 @@ export function DiscoveryCta() {
     </section>
   );
 }
-

@@ -43,7 +43,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           <SectionHeading
             eyebrow="Curated Category"
             title={category.name}
-            description={category.description ?? 'Explore verified products and useful finds in this collection.'}
+            description={
+              category.description ??
+              'Explore verified products and useful finds in this collection.'
+            }
           />
 
           <div className="mt-12">

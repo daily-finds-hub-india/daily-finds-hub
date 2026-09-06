@@ -29,6 +29,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   const searchParams = useSearchParams();
 
   const activeCategory = searchParams.get('category') ?? 'all';
+
   const activeSort = searchParams.get('sort') ?? 'featured';
 
   const filterCategories = [{ id: 'all', name: 'All' }, ...categories];
@@ -50,10 +51,11 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   }
 
   return (
-    <div className="mb-12 border-y border-[var(--border)] py-4">
+    <div className="mb-12 border-y border-[var(--border)] py-4 sm:py-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* Category filters */}
         <div
-          className="themed-scrollbar flex gap-2 overflow-x-auto pb-1 lg:pb-0"
+          className="themed-scrollbar -mx-1 flex min-w-0 gap-2 overflow-x-auto px-1 pb-1 lg:mx-0 lg:px-0 lg:pb-0"
           role="group"
           aria-label="Filter by category"
         >
@@ -65,10 +67,12 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 key={category.id}
                 type="button"
                 onClick={() => updateFilter('category', category.id)}
+                aria-pressed={isActive}
                 className={[
-                  'shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200 shadow-xs',
+                  'min-h-10 shrink-0 rounded-full border px-4 py-2 text-xs font-semibold shadow-xs transition-colors duration-200',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]',
                   isActive
-                    ? 'border-[var(--accent)] bg-[var(--accent)] text-slate-950 font-bold scale-[1.02]'
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] font-bold text-[var(--accent-text)]'
                     : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
                 ].join(' ')}
               >
@@ -78,7 +82,8 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
           })}
         </div>
 
-        <div className="flex shrink-0 items-center">
+        {/* Sort */}
+        <div className="flex w-full shrink-0 items-center lg:w-auto">
           <Select
             label="Sort"
             value={activeSort}

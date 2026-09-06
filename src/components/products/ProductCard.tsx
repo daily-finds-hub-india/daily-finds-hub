@@ -2,157 +2,131 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight, Flame, Sparkles, Star } from 'lucide-react';
 
-type DatabaseProduct = {
-  id: string;
-  name: string;
-  slug: string;
-  shortDescription: string;
-  description: string;
-  price: unknown;
-  originalPrice: unknown;
-  rating: unknown;
-  reviewCount: number;
-  amazonUrl: string | null;
-  asin: string | null;
-  isFeatured: boolean;
-  isTrending: boolean;
-  isPublished: boolean;
-  images?: ProductImage[];
-};
-
-type ProductImage = {
-  url: string;
-  altText: string;
-  isPrimary: boolean;
-};
-
-type LegacyProduct = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  image: string;
-  price?: {
-    amount: number;
-  };
-  featured?: boolean;
-  trending?: boolean;
-};
-
-export type Product = DatabaseProduct | LegacyProduct;
+import type { Product } from '@/types/product';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const isDatabaseProduct = 'shortDescription' in product;
-  const description = isDatabaseProduct
-    ? product.shortDescription
-    : product.description;
-  const isTrending = isDatabaseProduct ? product.isTrending : product.trending;
-  const isFeatured = isDatabaseProduct ? product.isFeatured : product.featured;
-  const price = isDatabaseProduct
-    ? product.price
-    : (product.price?.amount ?? null);
-  const originalPrice = isDatabaseProduct ? product.originalPrice : null;
-  const amazonUrl = isDatabaseProduct ? product.amazonUrl : null;
-  const image = isDatabaseProduct
-    ? (product.images?.find((item) => item.isPrimary) ?? product.images?.[0])
-    : product.image;
-  const rating = isDatabaseProduct ? product.rating : null;
-  const reviewCount = isDatabaseProduct ? product.reviewCount : 0;
+  const primaryImage =
+    product.images.find((image) => image.isPrimary) ?? product.images[0];
 
-  const imageUrl = typeof image === 'string' ? image : image?.url;
-  const imageAlt = typeof image === 'string' ? product.name : (image?.altText ?? product.name);
+  const price =
+    product.price !== null && product.price !== undefined
+      ? Number(product.price)
+      : null;
+
+  const originalPrice =
+    product.originalPrice !== null && product.originalPrice !== undefined
+      ? Number(product.originalPrice)
+      : null;
+
+  const hasDiscount =
+    price !== null && originalPrice !== null && originalPrice > price;
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-subtle)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-raised)]">
-      {/* Product Image & Badges */}
+    <article className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-subtle)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1.5 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-raised)]">
+      {/* Product image */}
       <Link
         href={`/products/${product.slug}`}
-        className="relative aspect-[4/5] w-full overflow-hidden bg-[var(--surface-muted)] focus-visible:outline-none"
-        tabIndex={0}
+        className="relative aspect-[4/5] w-full overflow-hidden bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset"
+        aria-label={`View ${product.name}`}
       >
-        {imageUrl ? (
+        {primaryImage ? (
           <Image
-            src={imageUrl}
-            alt={imageAlt}
+            src={primaryImage.url}
+            alt={primaryImage.altText || product.name}
             fill
             sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-[var(--surface-muted)] text-[var(--text-muted)]">
+          <div
+            className="absolute inset-0 flex items-center justify-center text-[var(--text-muted)]"
+            aria-hidden="true"
+          >
             <Sparkles size={28} strokeWidth={1.5} />
           </div>
         )}
 
-        {/* Badges Overlay */}
-        <div className="absolute left-3 top-3 right-3 flex items-center justify-between gap-1.5 pointer-events-none">
-          {isTrending ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)] px-2.5 py-0.5 text-[11px] font-extrabold tracking-wide text-slate-950 shadow-xs">
-              <Flame size={12} strokeWidth={2.5} />
-              <span>Trending</span>
-            </span>
-          ) : <span />}
+        {/* Product badges */}
+        {(product.isTrending || product.isFeatured) && (
+          <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+            {product.isTrending ? (
+              <span className="inline-flex min-h-7 max-w-[calc(100%-4rem)] items-center gap-1 rounded-full bg-[var(--accent)] px-2.5 py-1 text-[11px] font-extrabold tracking-wide text-slate-950 shadow-xs">
+                <Flame size={12} strokeWidth={2.5} aria-hidden="true" />
+                <span>Trending</span>
+              </span>
+            ) : (
+              <span />
+            )}
 
-          {isFeatured ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/80 backdrop-blur-xs px-2.5 py-0.5 text-[10px] font-bold text-white shadow-xs dark:bg-slate-800/90">
-              <Sparkles size={11} strokeWidth={2} />
-              <span>Featured</span>
-            </span>
-          ) : null}
-        </div>
+            {product.isFeatured && (
+              <span className="inline-flex min-h-7 shrink-0 items-center gap-1 rounded-full bg-slate-900/80 px-2.5 py-1 text-[10px] font-bold text-white shadow-xs backdrop-blur-md dark:bg-slate-800/90">
+                <Sparkles size={11} strokeWidth={2} aria-hidden="true" />
+                <span>Featured</span>
+              </span>
+            )}
+          </div>
+        )}
       </Link>
 
-      {/* Content Area */}
-      <div className="flex flex-1 flex-col justify-between p-4 sm:p-5">
-        <div>
+      {/* Content */}
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <div className="min-w-0 flex-1">
           <Link
             href={`/products/${product.slug}`}
-            className="block focus-visible:outline-none"
+            className="block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
-            <h3 className="line-clamp-2 text-sm sm:text-base font-bold leading-snug tracking-tight text-[var(--text-primary)] transition-colors duration-200 group-hover:text-[var(--accent)]">
+            <h3 className="line-clamp-2 text-sm font-bold leading-snug tracking-tight text-[var(--text-primary)] transition-colors duration-200 group-hover:text-[var(--accent)] sm:text-base">
               {product.name}
             </h3>
           </Link>
 
-          {description && (
-            <p className="mt-1.5 line-clamp-2 text-xs sm:text-sm leading-relaxed text-[var(--text-secondary)]">
-              {description}
+          {product.shortDescription && (
+            <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[var(--text-secondary)] sm:text-sm">
+              {product.shortDescription}
             </p>
           )}
 
-          {rating !== null && rating !== undefined ? (
-            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+          {/* Rating */}
+          {product.rating !== null && product.rating !== undefined && (
+            <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-[var(--text-muted)]">
               <Star
                 size={13}
                 fill="currentColor"
                 strokeWidth={1.5}
-                className="text-[var(--accent)]"
+                className="shrink-0 text-[var(--accent)]"
+                aria-hidden="true"
               />
+
               <span className="font-bold text-[var(--text-primary)]">
-                {String(rating)}
+                {Number(product.rating).toFixed(1)}
               </span>
-              {reviewCount > 0 ? (
-                <span>({reviewCount.toLocaleString('en-IN')})</span>
-              ) : null}
+
+              {product.reviewCount !== null &&
+                product.reviewCount !== undefined && (
+                  <span className="truncate">
+                    ({product.reviewCount.toLocaleString('en-IN')})
+                  </span>
+                )}
             </div>
-          ) : null}
+          )}
         </div>
 
-        {/* Pricing & Action Row */}
-        <div className="mt-4 flex items-center justify-between gap-2 border-t border-[var(--border)] pt-3.5">
-          <div>
-            {price !== null && price !== undefined ? (
-              <div className="flex items-baseline gap-1.5">
+        {/* Price and action */}
+        <div className="mt-4 flex min-w-0 items-end justify-between gap-2 border-t border-[var(--border)] pt-3.5">
+          <div className="min-w-0 flex-1">
+            {price !== null ? (
+              <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
                 <span className="text-base font-extrabold tracking-tight text-[var(--text-primary)]">
-                  ₹{Number(price).toLocaleString('en-IN')}
+                  ₹{price.toLocaleString('en-IN')}
                 </span>
-                {originalPrice !== null && originalPrice !== undefined && Number(originalPrice) > Number(price) && (
+
+                {hasDiscount && (
                   <span className="text-xs text-[var(--text-muted)] line-through">
-                    ₹{Number(originalPrice).toLocaleString('en-IN')}
+                    ₹{originalPrice.toLocaleString('en-IN')}
                   </span>
                 )}
               </div>
@@ -163,24 +137,27 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
           </div>
 
-          {amazonUrl ? (
+          {product.amazonUrl ? (
             <a
-              href={amazonUrl}
+              href={product.amazonUrl}
               target="_blank"
               rel="noopener noreferrer sponsored"
-              className="inline-flex items-center gap-1 rounded-xl bg-[var(--accent)] px-3 py-1.5 text-xs font-bold text-slate-950 shadow-xs transition-all duration-200 hover:bg-[var(--accent-hover)] hover:scale-105 active:scale-95"
+              className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-xl bg-[var(--accent)] px-3 py-1.5 text-xs font-bold text-slate-950 shadow-xs transition-[transform,background-color] duration-200 hover:scale-105 hover:bg-[var(--accent-hover)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
               aria-label={`Check price on Amazon for ${product.name}`}
             >
               <span>Amazon</span>
-              <ArrowUpRight size={13} strokeWidth={2.4} />
+
+              <ArrowUpRight size={13} strokeWidth={2.4} aria-hidden="true" />
             </a>
           ) : (
             <Link
               href={`/products/${product.slug}`}
-              className="inline-flex items-center gap-1 rounded-xl bg-[var(--surface-muted)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-all duration-200 hover:bg-[var(--surface-strong)]"
+              className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-xl bg-[var(--surface-muted)] px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:bg-[var(--surface-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]"
+              aria-label={`View details for ${product.name}`}
             >
               <span>Details</span>
-              <ArrowUpRight size={13} strokeWidth={2} />
+
+              <ArrowUpRight size={13} strokeWidth={2} aria-hidden="true" />
             </Link>
           )}
         </div>
@@ -188,4 +165,3 @@ export function ProductCard({ product }: ProductCardProps) {
     </article>
   );
 }
-

@@ -8,6 +8,7 @@ import { IconButton } from '@/components/ui/IconButton';
 type Theme = 'light' | 'dark';
 
 const STORAGE_KEY = 'daily-finds-theme';
+const THEME_EVENT = 'daily-finds-theme-change';
 
 function getTheme(): Theme {
   if (typeof document === 'undefined') {
@@ -18,10 +19,22 @@ function getTheme(): Theme {
 }
 
 function subscribe(callback: () => void) {
-  window.addEventListener('storage', callback);
+  function handleStorage(event: StorageEvent) {
+    if (event.key === STORAGE_KEY || event.key === null) {
+      callback();
+    }
+  }
+
+  function handleThemeChange() {
+    callback();
+  }
+
+  window.addEventListener('storage', handleStorage);
+  window.addEventListener(THEME_EVENT, handleThemeChange);
 
   return () => {
-    window.removeEventListener('storage', callback);
+    window.removeEventListener('storage', handleStorage);
+    window.removeEventListener(THEME_EVENT, handleThemeChange);
   };
 }
 
@@ -39,7 +52,7 @@ export function ThemeToggle() {
 
     localStorage.setItem(STORAGE_KEY, nextTheme);
 
-    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new Event(THEME_EVENT));
   }
 
   const isDark = theme === 'dark';
@@ -50,9 +63,9 @@ export function ThemeToggle() {
       onClick={toggleTheme}
     >
       {isDark ? (
-        <Sun size={18} strokeWidth={1.8} />
+        <Sun size={18} strokeWidth={1.8} aria-hidden="true" />
       ) : (
-        <Moon size={18} strokeWidth={1.8} />
+        <Moon size={18} strokeWidth={1.8} aria-hidden="true" />
       )}
     </IconButton>
   );

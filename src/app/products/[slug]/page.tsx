@@ -20,30 +20,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  const serializedProduct = {
-    id: product.id,
-    name: product.name,
-    slug: product.slug,
-    shortDescription: product.shortDescription,
-    description: product.description,
-    categoryId: product.categoryId,
-    price: product.price?.toString() ?? null,
-    originalPrice: product.originalPrice?.toString() ?? null,
-    rating: product.rating?.toString() ?? null,
-    reviewCount: product.reviewCount,
-    amazonUrl: product.amazonUrl,
-    asin: product.asin,
-    isFeatured: product.isFeatured,
-    isTrending: product.isTrending,
-    isPublished: product.isPublished,
-    images: product.images
-  };
-
   return (
     <main>
       <Section>
         <Container>
-          <ProductDetails product={serializedProduct} />
+          <ProductDetails product={product} />
         </Container>
       </Section>
     </main>

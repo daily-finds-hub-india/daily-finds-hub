@@ -20,8 +20,13 @@ export default async function ProductsPage({
   const params = await searchParams;
 
   const categories = await prisma.category.findMany({
-    orderBy: { name: 'asc' },
-    select: { id: true, name: true }
+    orderBy: {
+      name: 'asc'
+    },
+    select: {
+      id: true,
+      name: true
+    }
   });
 
   const products = await getPublicProducts({
@@ -30,32 +35,37 @@ export default async function ProductsPage({
     search: params.search
   });
 
+  const searchHeading = params.search
+    ? `Finds for "${params.search}"`
+    : 'All finds.';
+
+  const searchEyebrow = params.search
+    ? `Search results for "${params.search}"`
+    : 'The collection';
+
+  const description = params.search
+    ? `Showing curated products matching "${params.search}".`
+    : 'Browse useful gadgets, clever everyday products, and interesting things worth discovering.';
+
+  const emptyMessage = params.search
+    ? `No published products matched "${params.search}". Try a different keyword.`
+    : params.category
+      ? 'No published products match this category and sort.'
+      : 'No published products are available yet.';
+
   return (
     <main>
       <Section>
         <Container>
           <SectionHeading
-            eyebrow={params.search ? `Search results for "${params.search}"` : "The collection"}
-            title={params.search ? `Finds for "${params.search}"` : "All finds."}
-            description={
-              params.search
-                ? `Showing curated products matching "${params.search}".`
-                : "Browse useful gadgets, clever everyday products, and interesting things worth discovering."
-            }
+            eyebrow={searchEyebrow}
+            title={searchHeading}
+            description={description}
           />
 
-          <div className="mt-14">
+          <div className="mt-8">
             <ProductFilters categories={categories} />
-            <ProductGrid
-              products={products}
-              emptyMessage={
-                params.search
-                  ? `No published products matched "${params.search}". Try a different keyword.`
-                  : params.category
-                    ? 'No published products match this category and sort.'
-                    : 'No published products are available yet.'
-              }
-            />
+            <ProductGrid products={products} emptyMessage={emptyMessage} />
           </div>
         </Container>
       </Section>

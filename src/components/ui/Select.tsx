@@ -53,25 +53,37 @@ export function Select({
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative min-w-0">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex items-center gap-2 whitespace-nowrap text-sm font-medium text-[var(--text-primary)] outline-none"
+        className={cn(
+          'inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium',
+          'bg-[var(--surface)] text-[var(--text-primary)]',
+          'transition-[background-color,border-color,box-shadow] duration-200',
+          'hover:bg-[var(--surface-muted)]',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]',
+          open
+            ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]'
+            : 'border-[var(--border-strong)]'
+        )}
       >
         {label && (
-          <span className="font-normal text-[var(--text-muted)]">{label}</span>
+          <span className="shrink-0 font-normal text-[var(--text-muted)]">
+            {label}
+          </span>
         )}
 
-        <span>{selected?.label}</span>
+        <span className="truncate">{selected?.label ?? 'Select'}</span>
 
         <ChevronDown
           size={15}
           strokeWidth={1.8}
+          aria-hidden="true"
           className={cn(
-            'text-[var(--text-muted)] transition-transform',
+            'shrink-0 text-[var(--text-muted)] transition-transform duration-200',
             open && 'rotate-180'
           )}
         />
@@ -80,8 +92,11 @@ export function Select({
       {open && (
         <div
           role="listbox"
+          aria-label={label ?? 'Options'}
           className={cn(
-            'absolute z-30 mt-2 w-max min-w-[180px] max-w-[calc(100vw-2rem)] overflow-hidden border border-[var(--border)] bg-[var(--surface)] p-1 shadow-[0_12px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.3)]',
+            'absolute z-30 mt-2 min-w-[180px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-[var(--border-strong)]',
+            'bg-[var(--surface)] p-1.5 shadow-[var(--shadow-raised)]',
+            'animate-in fade-in-0 zoom-in-95 duration-150',
             align === 'left' ? 'left-0' : 'right-0'
           )}
         >
@@ -99,20 +114,21 @@ export function Select({
                   setOpen(false);
                 }}
                 className={cn(
-                  'flex w-full items-center justify-between gap-5 whitespace-nowrap px-3 py-2 text-left text-sm',
-                  'transition-colors',
+                  'flex min-h-10 w-full items-center justify-between gap-5 rounded-lg px-3 py-2 text-left text-sm',
+                  'transition-colors duration-150',
                   isSelected
-                    ? 'bg-[var(--surface-muted)] text-[var(--text-primary)]'
+                    ? 'bg-[var(--accent-soft)] font-semibold text-[var(--accent-text)]'
                     : 'text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]'
                 )}
               >
-                {option.label}
+                <span className="truncate">{option.label}</span>
 
                 {isSelected && (
                   <Check
                     size={14}
                     strokeWidth={2}
-                    className="text-[var(--accent)]"
+                    aria-hidden="true"
+                    className="shrink-0 text-[var(--accent)]"
                   />
                 )}
               </button>

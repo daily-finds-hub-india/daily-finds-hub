@@ -34,15 +34,23 @@ export default function AboutPage() {
 
             <div className="space-y-6 text-base leading-relaxed text-[var(--text-secondary)] sm:text-lg">
               <p>
-                Every day, thousands of new products flood online marketplaces. Many are clones or gimmick-heavy gadgets that break in a week. But tucked away are genuinely clever tools—products that solve an annoying daily friction, organize a messy desk, or simplify cooking dinner.
+                Every day, thousands of new products flood online marketplaces.
+                Many are clones or gimmick-heavy gadgets that break in a week.
+                But tucked away are genuinely clever tools—products that solve
+                an annoying daily friction, organize a messy desk, or simplify
+                cooking dinner.
               </p>
               <p>
-                At <strong>Daily Finds Hub</strong>, we track down those standout finds, test their utility, and curate them in one clean, uncluttered catalog. When you see something you love on our social reels or browse here, we provide direct, honest Amazon India links so you can check live prices and purchase safely.
+                At <strong>Daily Finds Hub</strong>, we track down those
+                standout finds, test their utility, and curate them in one
+                clean, uncluttered catalog. When you see something you love on
+                our social reels or browse here, we provide direct, honest
+                Amazon India links so you can check live prices and purchase
+                safely.
               </p>
             </div>
           </div>
 
-          {/* Three Pillars Cards */}
           <div className="mt-16 grid gap-6 sm:grid-cols-3">
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-xs transition-all duration-300 hover:shadow-md hover:-translate-y-1">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent-text)]">
@@ -52,7 +60,8 @@ export default function AboutPage() {
                 100% Useful
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
-                Every product must solve a real problem, save time, or deliver genuine everyday utility.
+                Every product must solve a real problem, save time, or deliver
+                genuine everyday utility.
               </p>
             </div>
 
@@ -64,7 +73,8 @@ export default function AboutPage() {
                 Clever & Curious
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
-                We hunt for unique finds that make you pause and say, &ldquo;I didn&apos;t know this existed, but I need it.&rdquo;
+                We hunt for unique finds that make you pause and say, &ldquo;I
+                didn&apos;t know this existed, but I need it.&rdquo;
               </p>
             </div>
 
@@ -76,19 +86,20 @@ export default function AboutPage() {
                 Transparent & Direct
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
-                No deceptive pricing or fake reviews. We link directly to verified Amazon listings with full affiliate disclosure.
+                No deceptive pricing or fake reviews. We link directly to
+                verified Amazon listings with full affiliate disclosure.
               </p>
             </div>
           </div>
 
-          {/* Social CTA Row */}
           <div className="mt-16 rounded-3xl border border-[var(--border-strong)] bg-[var(--surface)] p-8 sm:p-12 shadow-[var(--shadow-raised)] flex flex-col sm:flex-row items-center justify-between gap-6">
             <div>
               <h3 className="text-xl font-bold text-[var(--text-primary)]">
                 Ready to explore today&apos;s discoveries?
               </h3>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                Browse our full collection or check out what is trending on our reels right now.
+                Browse our full collection or check out what is trending on our
+                reels right now.
               </p>
             </div>
             <Link

@@ -1,4 +1,11 @@
-import { Shield, Eye, Database, ExternalLink, RefreshCw, Mail } from 'lucide-react';
+import {
+  Shield,
+  Eye,
+  Database,
+  ExternalLink,
+  RefreshCw,
+  Mail
+} from 'lucide-react';
 
 import { Container } from '@/components/layout/Container';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -6,7 +13,8 @@ import { Section } from '@/components/ui/Section';
 
 export const metadata = {
   title: 'Privacy Policy',
-  description: 'Privacy policy and data protection practices for Daily Finds Hub India.'
+  description:
+    'Privacy policy and data protection practices for Daily Finds Hub India.'
 };
 
 const policySections = [

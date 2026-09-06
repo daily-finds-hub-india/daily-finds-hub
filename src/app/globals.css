@@ -3,144 +3,282 @@
 :root {
   color-scheme: light;
 
-  /* Canvas & Surface */
+  /* =========================================================
+     Core surfaces
+     ========================================================= */
+
   --background: #f8fafc;
   --foreground: #0f172a;
+
   --surface: #ffffff;
   --surface-muted: #f1f5f9;
   --surface-strong: #e2e8f0;
   --surface-elevated: #ffffff;
 
-  /* Borders */
+  /* =========================================================
+     Borders
+     ========================================================= */
+
   --border: rgba(15, 23, 42, 0.08);
   --border-strong: rgba(15, 23, 42, 0.16);
 
-  /* Typography */
+  /* =========================================================
+     Typography
+     ========================================================= */
+
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
 
-  /* Signal & Accent (Solar Amber) */
+  /* =========================================================
+     Brand / accent
+     ========================================================= */
+
   --accent: #f59e0b;
   --accent-hover: #d97706;
   --accent-soft: #fef3c7;
   --accent-text: #78350f;
   --signal: #f59e0b;
 
-  /* Category Badges */
+  /* =========================================================
+     Semantic states
+     ========================================================= */
+
+  --success: #059669;
+  --success-soft: #ecfdf5;
+
+  --warning: #d97706;
+  --warning-soft: #fffbeb;
+
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+
+  --info: #2563eb;
+  --info-soft: #eff6ff;
+
+  /* =========================================================
+     Category badges
+     ========================================================= */
+
   --badge-tech-bg: #eff6ff;
   --badge-tech-text: #1d4ed8;
+
   --badge-home-bg: #fffbeb;
   --badge-home-text: #b45309;
+
   --badge-travel-bg: #ecfdf5;
   --badge-travel-text: #047857;
 
-  /* Chrome & Overlays */
-  --header-background: rgba(248, 250, 252, 0.85);
+  /* =========================================================
+     Site chrome
+     ========================================================= */
+
+  --header-background: rgba(248, 250, 252, 0.88);
+
   --footer-background: #0f172a;
   --footer-foreground: #f8fafc;
   --footer-muted: #94a3b8;
   --footer-border: rgba(255, 255, 255, 0.1);
 
-  /* Geometry */
+  /* =========================================================
+     Geometry
+     ========================================================= */
+
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
 
-  /* Elevation Shadows */
-  --shadow-subtle: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
-  --shadow-card: 0 4px 12px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
-  --shadow-raised: 0 20px 30px -10px rgba(15, 23, 42, 0.08), 0 10px 15px -5px rgba(15, 23, 42, 0.04);
+  /* =========================================================
+     Elevation
+     ========================================================= */
+
+  --shadow-subtle:
+    0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+
+  --shadow-card:
+    0 4px 12px -2px rgba(15, 23, 42, 0.05),
+    0 2px 6px -1px rgba(15, 23, 42, 0.03);
+
+  --shadow-raised:
+    0 20px 30px -10px rgba(15, 23, 42, 0.08),
+    0 10px 15px -5px rgba(15, 23, 42, 0.04);
+
+  /* =========================================================
+     Motion
+     ========================================================= */
+
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dark {
   color-scheme: dark;
 
-  /* Canvas & Surface */
+  /* =========================================================
+     Core surfaces
+     ========================================================= */
+
   --background: #090d16;
   --foreground: #f8fafc;
+
   --surface: #111827;
   --surface-muted: #161f33;
   --surface-strong: #1e293b;
   --surface-elevated: #1a233a;
 
-  /* Borders */
+  /* =========================================================
+     Borders
+     ========================================================= */
+
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
 
-  /* Typography */
+  /* =========================================================
+     Typography
+     ========================================================= */
+
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
 
-  /* Signal & Accent (Glowing Amber) */
+  /* =========================================================
+     Brand / accent
+     ========================================================= */
+
   --accent: #fbbf24;
   --accent-hover: #f59e0b;
   --accent-soft: rgba(251, 191, 36, 0.15);
   --accent-text: #fef3c7;
   --signal: #fbbf24;
 
-  /* Category Badges */
+  /* =========================================================
+     Semantic states
+     ========================================================= */
+
+  --success: #34d399;
+  --success-soft: rgba(16, 185, 129, 0.12);
+
+  --warning: #fbbf24;
+  --warning-soft: rgba(245, 158, 11, 0.12);
+
+  --danger: #f87171;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+
+  --info: #60a5fa;
+  --info-soft: rgba(59, 130, 246, 0.12);
+
+  /* =========================================================
+     Category badges
+     ========================================================= */
+
   --badge-tech-bg: rgba(59, 130, 246, 0.15);
   --badge-tech-text: #93c5fd;
+
   --badge-home-bg: rgba(245, 158, 11, 0.15);
   --badge-home-text: #fde68a;
+
   --badge-travel-bg: rgba(16, 185, 129, 0.15);
   --badge-travel-text: #6ee7b7;
 
-  /* Chrome & Overlays */
-  --header-background: rgba(9, 13, 22, 0.85);
+  /* =========================================================
+     Site chrome
+     ========================================================= */
+
+  --header-background: rgba(9, 13, 22, 0.88);
+
   --footer-background: #05080f;
   --footer-foreground: #f8fafc;
   --footer-muted: #94a3b8;
   --footer-border: rgba(255, 255, 255, 0.08);
 
-  /* Elevation Shadows */
+  /* =========================================================
+     Elevation
+     ========================================================= */
+
   --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+
   --shadow-card: 0 4px 14px -2px rgba(0, 0, 0, 0.45);
+
   --shadow-raised: 0 20px 35px -10px rgba(0, 0, 0, 0.6);
 }
 
-* {
+/* =========================================================
+   Global box model
+   ========================================================= */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
+/* =========================================================
+   Document
+   ========================================================= */
+
 html {
   scroll-behavior: smooth;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
+  min-height: 100vh;
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-ibm-plex), ui-sans-serif, system-ui, sans-serif;
+  font-family:
+    var(--font-ibm-plex),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  transition:
+    background-color var(--duration-normal) var(--ease-standard),
+    color var(--duration-normal) var(--ease-standard);
 }
+
+/* =========================================================
+   Typography
+   ========================================================= */
 
 h1,
 h2,
 h3,
 h4,
 h5,
-h6,
-p {
+h6 {
   margin: 0;
+  font-family:
+    var(--font-archivo), var(--font-ibm-plex), ui-sans-serif, system-ui,
+    sans-serif;
+  text-wrap: balance;
 }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-archivo), var(--font-ibm-plex), sans-serif;
+p {
+  margin: 0;
+  text-wrap: pretty;
 }
 
 a {
   color: inherit;
   text-decoration: none;
 }
+
+/* =========================================================
+   Interactive elements
+   ========================================================= */
 
 button,
 input,
@@ -153,21 +291,66 @@ button {
   cursor: pointer;
 }
 
-button:disabled {
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
   cursor: not-allowed;
 }
 
-img {
+/* =========================================================
+   Media
+   ========================================================= */
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+}
+
+img,
+video {
   max-width: 100%;
+}
+
+img {
   height: auto;
 }
+
+/* =========================================================
+   Selection
+   ========================================================= */
 
 ::selection {
   background: var(--accent);
   color: #0f172a;
 }
 
-/* Theme-aware scrollbars */
+/* =========================================================
+   Focus
+   ========================================================= */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/*
+ * Don't add custom outlines to elements that already provide
+ * a stronger, component-specific focus treatment.
+ */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline-offset: 1px;
+}
+
+/* =========================================================
+   Scrollbars
+   ========================================================= */
+
 .themed-scrollbar {
   scrollbar-color: var(--border-strong) transparent;
   scrollbar-width: thin;
@@ -191,7 +374,10 @@ img {
   background: var(--text-muted);
 }
 
-/* Theme-aware native form controls */
+/* =========================================================
+   Native form controls
+   ========================================================= */
+
 .themed-select {
   color-scheme: inherit;
   background-color: var(--surface);
@@ -203,15 +389,22 @@ img {
   color: var(--text-primary);
 }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
+/* =========================================================
+   Site footer
+   ========================================================= */
 
 .site-footer {
   background: var(--footer-background);
   color: var(--footer-foreground);
 }
+
+/* =========================================================
+   Admin foundation
+   =========================================================
+   Kept temporarily because the admin frontend will be rebuilt
+   after the public frontend. These styles can be simplified
+   during the admin pass.
+   ========================================================= */
 
 .admin-shell {
   min-height: 100vh;
@@ -230,7 +423,9 @@ img {
   background-color: var(--accent);
   color: #0f172a;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 }
 
 .admin-primary:hover {
@@ -243,7 +438,10 @@ img {
   border: 1px solid var(--border-strong);
   color: var(--text-primary);
   border-radius: var(--radius-md);
-  transition: all 0.2s ease;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
 }
 
 .admin-secondary:hover {
@@ -256,6 +454,9 @@ img {
   border: 1px solid rgba(239, 68, 68, 0.3);
   color: #ef4444;
   border-radius: var(--radius-md);
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
 }
 
 .admin-danger:hover {
@@ -275,7 +476,7 @@ img {
   outline-offset: 1px;
 }
 
-/* Admin compatibility layer for existing manager markup */
+/* Existing admin manager compatibility */
 .admin-shell button[class*='bg-[var(--accent)]'],
 .admin-shell a[class*='bg-[var(--accent)]'] {
   background-color: var(--accent) !important;
@@ -301,6 +502,10 @@ img {
   color: var(--text-primary);
 }
 
+/* =========================================================
+   Reduced motion
+   ========================================================= */
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -316,3 +521,34 @@ img {
   }
 }
 
+/* =========================================================
+   Small-screen safeguards
+   ========================================================= */
+
+@media (max-width: 639px) {
+  body {
+    overflow-x: hidden;
+  }
+}
+
+@keyframes page-header-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header-fade-up {
+  animation: page-header-fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-header-fade-up {
+    animation: none;
+  }
+}

@@ -1,24 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+
 import Link from 'next/link';
-import { ArrowUpRight, Search, X } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Search,
+  X,
+  Loader2,
+  Tag,
+  ShoppingBag
+} from 'lucide-react';
 
+import { useProductSearch } from '@/components/search/useProductSearch';
 import { cn } from '@/lib/utils';
-
-type SearchProduct = {
-  id: string;
-  name: string;
-  slug: string;
-  shortDescription: string;
-};
-
-type SearchCategory = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-};
 
 interface HeaderSearchProps {
   isOpen: boolean;
@@ -27,80 +23,51 @@ interface HeaderSearchProps {
 }
 
 export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
-  const [query, setQuery] = useState('');
-  const [productResults, setProductResults] = useState<SearchProduct[]>([]);
-  const [categoryResults, setCategoryResults] = useState<SearchCategory[]>([]);
-  const [resultsQuery, setResultsQuery] = useState('');
+  const {
+    query,
+    setQuery,
+    normalizedQuery,
+    products,
+    categories,
+    isLoading,
+    error,
+    clearSearch
+  } = useProductSearch();
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const normalizedQuery = query.trim();
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    if (!normalizedQuery) {
-      return () => controller.abort();
-    }
-
-    const timeout = window.setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `/api/search?q=${encodeURIComponent(normalizedQuery)}`,
-          { signal: controller.signal }
-        );
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          setProductResults(data.products);
-          setCategoryResults(data.categories);
-          setResultsQuery(normalizedQuery);
-        }
-      } catch (error) {
-        if (!(error instanceof DOMException && error.name === 'AbortError')) {
-          setProductResults([]);
-          setCategoryResults([]);
-        }
-      }
-    }, 200);
-
-    return () => {
-      window.clearTimeout(timeout);
-      controller.abort();
-    };
-  }, [normalizedQuery]);
-
-  const visibleProductResults =
-    resultsQuery === normalizedQuery ? productResults : [];
-  const visibleCategoryResults =
-    resultsQuery === normalizedQuery ? categoryResults : [];
-
-  const hasResults =
-    visibleProductResults.length > 0 || visibleCategoryResults.length > 0;
+  const hasResults = products.length > 0 || categories.length > 0;
+  const isDropdownVisible = isOpen && Boolean(normalizedQuery);
 
   const handleClose = useCallback(() => {
-    setQuery('');
+    clearSearch();
     onClose();
-  }, [onClose]);
+  }, [clearSearch, onClose]);
+
+  const handleSubmit = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+
+      if (!normalizedQuery) return;
+
+      router.push(`/products?search=${encodeURIComponent(normalizedQuery)}`);
+    },
+    [normalizedQuery, router]
+  );
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
 
-    const frame = requestAnimationFrame(() => {
+    const frame = window.requestAnimationFrame(() => {
       inputRef.current?.focus();
     });
 
-    return () => {
-      cancelAnimationFrame(frame);
-    };
+    return () => window.cancelAnimationFrame(frame);
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
 
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -118,164 +85,185 @@ export function HeaderSearch({ isOpen, onOpen, onClose }: HeaderSearchProps) {
     }
 
     document.addEventListener('mousedown', handleClickOutside);
-
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, handleClose]);
 
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        'relative flex items-center',
-        isOpen &&
-          'max-sm:absolute max-sm:left-0 max-sm:right-0 max-sm:top-full max-sm:border-b max-sm:border-[var(--border)] max-sm:bg-[var(--background)]'
-      )}
-    >
+    <div ref={containerRef} className="relative flex items-center">
       <div
         className={cn(
-          'flex items-center overflow-hidden transition-[width] duration-300 ease-out',
-          isOpen
-            ? 'w-[min(22rem,42vw)] max-sm:w-full max-sm:px-5 max-sm:py-3'
-            : 'w-10'
+          'relative transition-all duration-300 ease-out',
+          isOpen ? 'w-64 sm:w-80 md:w-96' : 'w-10'
         )}
       >
         {!isOpen ? (
           <button
             type="button"
             onClick={onOpen}
-            aria-label="Search"
-            className="flex h-10 w-10 items-center justify-center text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+            aria-label="Open search"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
-            <Search size={18} strokeWidth={1.8} />
+            <Search size={18} strokeWidth={2} />
           </button>
         ) : (
-          <div className="flex h-10 w-full items-center border-b-2 border-[var(--accent)] max-sm:h-11">
-            <Search
-              size={17}
-              strokeWidth={2}
-              className="mr-2 shrink-0 text-[var(--accent)]"
-            />
-
-            <input
-              ref={inputRef}
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search gadgets, kitchen & home finds..."
-              aria-label="Search products and categories"
-              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
-            />
-
-            <button
-              type="button"
-              onClick={handleClose}
-              aria-label="Close search"
-              className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+          <div className="group/search relative w-full">
+            {/* Unified Top Form */}
+            <form
+              onSubmit={handleSubmit}
+              className={cn(
+                'flex h-11 w-full items-center bg-[var(--surface)] px-3.5 transition-all',
+                'border border-[var(--border-strong)] group-focus-within/search:border-[var(--accent)]',
+                isDropdownVisible
+                  ? 'rounded-t-2xl rounded-b-none border-b-transparent shadow-none'
+                  : 'rounded-full shadow-xs'
+              )}
             >
-              <X size={16} strokeWidth={2} />
-            </button>
+              <Search
+                size={16}
+                strokeWidth={2}
+                className="mr-2.5 shrink-0 text-[var(--text-muted)] transition-colors group-focus-within/search:text-[var(--accent)]"
+              />
+
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search gadgets, kitchen & home..."
+                aria-label="Search"
+                autoComplete="off"
+                style={{
+                  outline: 'none',
+                  boxShadow: 'none',
+                  border: 'none',
+                  background: 'transparent'
+                }}
+                className="w-full text-sm font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+              />
+
+              {/* Action Buttons: Clear Query & Close Search */}
+              <div className="flex items-center gap-1">
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery('')}
+                    aria-label="Clear query text"
+                    title="Clear text"
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--surface-muted)] text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
+                  >
+                    <X size={11} strokeWidth={2.5} />
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  aria-label="Close search"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+                >
+                  <X size={14} strokeWidth={2} />
+                </button>
+              </div>
+            </form>
+
+            {/* Attached Dropdown Body */}
+            {isDropdownVisible && (
+              <div
+                className={cn(
+                  'absolute left-0 right-0 top-full z-50 overflow-hidden',
+                  'rounded-b-2xl border border-t-0 bg-[var(--surface)] shadow-2xl',
+                  'border-[var(--border-strong)] group-focus-within/search:border-[var(--accent)]'
+                )}
+              >
+                {/* Connecting Divider Line */}
+                <div className="mx-3.5 border-t border-[var(--border)]" />
+
+                {isLoading ? (
+                  <div className="flex items-center gap-2.5 px-4 py-3.5 text-sm text-[var(--text-secondary)]">
+                    <Loader2
+                      size={16}
+                      className="animate-spin text-[var(--accent)]"
+                    />
+                    <span>Searching for &quot;{query}&quot;...</span>
+                  </div>
+                ) : error ? (
+                  <div className="px-4 py-3.5 text-sm text-[var(--text-secondary)]">
+                    Search is currently unavailable.
+                  </div>
+                ) : !hasResults ? (
+                  <div className="px-4 py-3.5 text-sm text-[var(--text-secondary)]">
+                    No results found for &quot;{query}&quot;.
+                  </div>
+                ) : (
+                  <div className="max-h-80 overflow-y-auto divide-y divide-[var(--border)] py-1">
+                    {products.length > 0 && (
+                      <div className="p-1.5">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                          <ShoppingBag size={12} />
+                          <span>Products</span>
+                        </div>
+                        {products.map((product) => (
+                          <Link
+                            key={product.id}
+                            href={`/products/${product.slug}`}
+                            onClick={handleClose}
+                            className="group/item flex items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors hover:bg-[var(--surface-muted)]"
+                          >
+                            <div className="min-w-0 pr-2">
+                              <p className="truncate font-medium text-[var(--text-primary)] group-hover/item:text-[var(--accent)]">
+                                {product.name}
+                              </p>
+                              {product.shortDescription && (
+                                <p className="truncate text-xs text-[var(--text-secondary)]">
+                                  {product.shortDescription}
+                                </p>
+                              )}
+                            </div>
+                            <ArrowUpRight
+                              size={14}
+                              className="shrink-0 text-[var(--text-muted)] transition-transform group-hover/item:-translate-y-0.5 group-hover/item:translate-x-0.5 group-hover/item:text-[var(--accent)]"
+                            />
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+
+                    {categories.length > 0 && (
+                      <div className="p-1.5">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                          <Tag size={12} />
+                          <span>Categories</span>
+                        </div>
+                        {categories.map((category) => (
+                          <Link
+                            key={category.id}
+                            href={`/categories/${category.slug}`}
+                            onClick={handleClose}
+                            className="group/item flex items-center justify-between rounded-xl px-3 py-2 text-sm transition-colors hover:bg-[var(--surface-muted)]"
+                          >
+                            <span className="truncate font-medium text-[var(--text-primary)] group-hover/item:text-[var(--accent)]">
+                              {category.name}
+                            </span>
+                            <ArrowUpRight
+                              size={14}
+                              className="shrink-0 text-[var(--text-muted)] transition-transform group-hover/item:-translate-y-0.5 group-hover/item:translate-x-0.5 group-hover/item:text-[var(--accent)]"
+                            />
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
-
-      {isOpen && normalizedQuery && (
-        <div className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(26rem,80vw)] overflow-hidden rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] shadow-[var(--shadow-raised)] max-sm:left-0 max-sm:right-0 max-sm:top-[calc(100%+0.75rem)] max-sm:w-full">
-
-          {!hasResults ? (
-            <div className="px-5 py-6">
-              <p className="text-sm font-medium text-[var(--text-primary)]">
-                No finds yet.
-              </p>
-
-              <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
-                Nothing matched &quot;{query}&quot;.
-              </p>
-            </div>
-          ) : (
-            <div className="max-h-[60vh] overflow-y-auto">
-              {visibleProductResults.length > 0 && (
-                <div>
-                  <div className="border-b border-[var(--border)] px-5 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                      Products
-                    </p>
-                  </div>
-
-                  <div className="divide-y divide-[var(--border)]">
-                    {visibleProductResults.map((product) => (
-                      <Link
-                        key={product.id}
-                        href={`/products/${product.slug}`}
-                        onClick={handleClose}
-                        className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-[var(--surface-muted)]"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-[var(--text-primary)] transition-colors group-hover:text-[var(--accent)]">
-                            {product.name}
-                          </p>
-
-                          <p className="mt-1 truncate text-xs text-[var(--text-secondary)]">
-                            {product.shortDescription}
-                          </p>
-                        </div>
-
-                        <ArrowUpRight
-                          size={15}
-                          strokeWidth={1.7}
-                          className="shrink-0 text-[var(--text-muted)] transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--accent)]"
-                        />
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {visibleCategoryResults.length > 0 && (
-                <div>
-                  <div className="border-b border-t border-[var(--border)] px-5 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                      Categories
-                    </p>
-                  </div>
-
-                  <div className="divide-y divide-[var(--border)]">
-                    {visibleCategoryResults.map((category) => (
-                      <Link
-                        key={category.id}
-                        href={`/category/${category.slug}`}
-                        onClick={handleClose}
-                        className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-[var(--surface-muted)]"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-[var(--text-primary)] transition-colors group-hover:text-[var(--accent)]">
-                            {category.name}
-                          </p>
-
-                          <p className="mt-1 truncate text-xs text-[var(--text-secondary)]">
-                            {category.description}
-                          </p>
-                        </div>
-
-                        <ArrowUpRight
-                          size={15}
-                          strokeWidth={1.7}
-                          className="shrink-0 text-[var(--text-muted)] transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[var(--accent)]"
-                        />
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

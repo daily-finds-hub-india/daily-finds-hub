@@ -1,10 +1,17 @@
-import type { ProductCategory } from './product';
+export interface CategoryImage {
+  id?: string;
+  url: string;
+  publicId?: string;
+  altText?: string;
+  displayOrder?: number;
+  isPrimary: boolean;
+}
 
 export interface Category {
-  id: ProductCategory;
+  id: string;
   name: string;
-  description: string;
   slug: string;
-  image: string;
-  isFeatured?: boolean;
+  description: string | null;
+  images: CategoryImage[];
+  isFeatured: boolean;
 }

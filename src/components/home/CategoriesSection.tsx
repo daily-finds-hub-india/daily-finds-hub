@@ -1,31 +1,19 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
+import { CategoryGrid } from '@/components/categories/CategoryGrid';
 import { Container } from '@/components/layout/Container';
-import { CategoryCard } from '@/components/home/CategoryCard';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { EmptyState } from '@/components/ui/EmptyState';
 
-type CategoryImage = {
-  url: string;
-  isPrimary: boolean;
-};
+import type { Category } from '@/types/category';
 
-type Category = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  images: CategoryImage[];
-  isFeatured: boolean;
-};
-
-interface CategoriesProps {
+interface CategoriesSectionProps {
   categories: Category[];
 }
 
-export function Categories({ categories }: CategoriesProps) {
+export function CategoriesSection({ categories }: CategoriesSectionProps) {
   const featuredCategories = categories.slice(0, 3);
 
   if (featuredCategories.length === 0) {
@@ -45,7 +33,7 @@ export function Categories({ categories }: CategoriesProps) {
   return (
     <Section className="border-t border-[var(--border)]">
       <Container>
-        <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-5 sm:gap-8 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
             eyebrow="Explore"
             title="Find your kind of useful."
@@ -53,22 +41,25 @@ export function Categories({ categories }: CategoriesProps) {
           />
 
           <Link
-            href="/category"
-            className="group inline-flex shrink-0 items-center gap-2 self-start border-b border-[var(--border-strong)] pb-1.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] sm:self-auto"
+            href="/categories"
+            className="group inline-flex min-h-9 w-fit shrink-0 items-center gap-2 border-b border-[var(--border-strong)] pb-1.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
-            View all categories
+            <span>View all</span>
+
             <ArrowRight
               size={16}
               strokeWidth={1.8}
               className="transition-transform duration-200 group-hover:translate-x-1"
+              aria-hidden="true"
             />
           </Link>
         </div>
 
-        <div className="mt-12 grid gap-3 sm:grid-cols-3">
-          {featuredCategories.map((category) => (
-            <CategoryCard key={category.id} category={category} />
-          ))}
+        <div className="mt-8 sm:mt-10 lg:mt-12">
+          <CategoryGrid
+            categories={featuredCategories}
+            className="lg:grid-cols-3"
+          />
         </div>
       </Container>
     </Section>

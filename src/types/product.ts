@@ -1,30 +1,34 @@
-export type ProductCategory =
-  | 'kitchen'
-  | 'home'
-  | 'tech'
-  | 'desk'
-  | 'travel'
-  | 'lifestyle';
+export interface ProductImage {
+  id?: string;
+  url: string;
+  publicId?: string;
+  altText: string;
+  displayOrder?: number;
+  isPrimary: boolean;
+}
 
 export interface Product {
   id: string;
-  slug: string;
   name: string;
+  slug: string;
+
+  shortDescription: string;
   description: string;
-  category: ProductCategory;
 
-  image: string;
+  categoryId: string;
 
-  price?: {
-    amount: number;
-    currency: 'INR';
-  };
+  price: number | string;
+  originalPrice: number | string | null;
 
-  rating?: number;
-  reviewCount?: number;
+  rating: number | string | null;
+  reviewCount: number;
 
-  featured?: boolean;
-  trending?: boolean;
+  amazonUrl: string | null;
+  asin: string | null;
 
-  amazonUrl?: string;
+  isFeatured: boolean;
+  isTrending: boolean;
+  isPublished: boolean;
+
+  images: ProductImage[];
 }

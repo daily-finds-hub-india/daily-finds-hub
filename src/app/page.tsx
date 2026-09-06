@@ -1,66 +1,38 @@
-import { prisma } from '@/lib/prisma';
+import { getPublicCategories, getPublicProducts } from '@/lib/queries/public';
 
-import { Categories } from '@/components/home/Categories';
+import { CategoriesSection } from '@/components/home/CategoriesSection';
 import { DiscoveryCta } from '@/components/home/DiscoveryCta';
-import { FeaturedProducts } from '@/components/home/FeaturedProducts';
+import { FeaturedSection } from '@/components/home/FeaturedSection';
 import { Hero } from '@/components/home/Hero';
-import { TrendingProducts } from '@/components/home/TrendingProducts';
+import { TrendingSection } from '@/components/home/TrendingSection';
 
 export default async function Home() {
   const [featuredProducts, trendingProducts, categories] = await Promise.all([
-    prisma.product.findMany({
-      where: {
-        isPublished: true,
-        isFeatured: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      take: 6,
-      include: { images: { orderBy: { displayOrder: 'asc' } } }
+    getPublicProducts({
+      sort: 'featured',
+      take: 6
     }),
 
-    prisma.product.findMany({
-      where: {
-        isPublished: true,
-        isTrending: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      take: 6,
-      include: { images: { orderBy: { displayOrder: 'asc' } } }
+    getPublicProducts({
+      sort: 'trending',
+      take: 6
     }),
 
-    prisma.category.findMany({
-      where: {
-        isFeatured: true
-      },
-      orderBy: {
-        name: 'asc'
-      },
-      take: 6,
-      include: {
-        images: { orderBy: { displayOrder: 'asc' } }
-      }
+    getPublicCategories({
+      featured: true,
+      take: 6
     })
   ]);
 
   return (
     <main>
-      <Hero
-        image={
-          featuredProducts[0]?.images.find((image) => image.isPrimary) ??
-          featuredProducts[0]?.images[0]
-        }
-        featuredProduct={featuredProducts[0]}
-      />
+      <Hero />
 
-      <FeaturedProducts products={featuredProducts} />
+      <FeaturedSection products={featuredProducts} />
 
-      <Categories categories={categories} />
+      <CategoriesSection categories={categories} />
 
-      <TrendingProducts products={trendingProducts} />
+      <TrendingSection products={trendingProducts} />
 
       <DiscoveryCta />
     </main>
