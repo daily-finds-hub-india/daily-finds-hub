@@ -2,76 +2,172 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Tags, X } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  LayoutDashboard,
+  Package,
+  Tags
+} from 'lucide-react';
 
-const navigation = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/products', label: 'Products', icon: Package },
-  { href: '/admin/categories', label: 'Categories', icon: Tags }
+import { cn } from '@/lib/utils';
+import { useAdminSidebar } from './AdminSidebarContext';
+
+const adminNavigation = [
+  {
+    label: 'Dashboard',
+    href: '/admin',
+    icon: LayoutDashboard
+  },
+  {
+    label: 'Products',
+    href: '/admin/products',
+    icon: Package
+  },
+  {
+    label: 'Categories',
+    href: '/admin/categories',
+    icon: Tags
+  }
 ];
 
-interface AdminNavigationProps {
-  mobileOpen?: boolean;
-  onClose?: () => void;
-}
-
-export function AdminNavigation({
-  mobileOpen = false,
-  onClose
-}: AdminNavigationProps) {
+export function AdminNavigation() {
   const pathname = usePathname();
+  const { collapsed, toggleSidebar } = useAdminSidebar();
+
+  function isActiveRoute(href: string) {
+    if (href === '/admin') {
+      return pathname === '/admin';
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
 
   return (
-    <>
-      {mobileOpen ? (
-        <button
-          type="button"
-          aria-label="Close navigation"
-          onClick={onClose}
-          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
-        />
-      ) : null}
+    <aside
+      aria-label="Admin navigation"
+      className={cn(
+        'sticky top-[4.5rem] h-[calc(100vh-4.5rem)]',
+        'shrink-0 overflow-hidden',
+        'border-r border-[var(--border)]',
+        'bg-[var(--surface)]',
+        'transition-[width] duration-300 ease-out',
+        'sm:top-[4.75rem] sm:h-[calc(100vh-4.75rem)]',
+        collapsed ? 'w-20' : 'w-64'
+      )}
+    >
+      <div className="flex h-full flex-col">
+        {/* Navigation */}
+        <nav
+          className={cn(
+            'flex-1 overflow-y-auto py-6',
+            collapsed ? 'px-2' : 'px-3'
+          )}
+          aria-label="Administration"
+        >
+          {!collapsed && (
+            <p className="mb-3 px-2 text-[9px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+              Administration
+            </p>
+          )}
 
-      <aside
-        className={`admin-surface fixed inset-y-0 left-0 z-50 w-72 border-r border-[var(--border)] p-5 transition-transform duration-200 lg:static lg:z-auto lg:flex lg:w-64 lg:translate-x-0 lg:flex-col lg:shrink-0 lg:border-r ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex justify-end lg:hidden">
+          <ul className="space-y-1">
+            {adminNavigation.map((item) => {
+              const active = isActiveRoute(item.href);
+              const Icon = item.icon;
+
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    title={collapsed ? item.label : undefined}
+                    className={cn(
+                      'group relative flex min-h-11 items-center rounded-xl',
+                      'font-semibold',
+                      'transition-colors duration-200',
+                      collapsed ? 'justify-center px-2' : 'gap-3 px-3',
+                      active
+                        ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]'
+                    )}
+                  >
+                    {active && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-full bg-[var(--accent)]"
+                      />
+                    )}
+
+                    <span
+                      className={cn(
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+                        'transition-colors duration-200',
+                        active
+                          ? 'bg-[var(--accent)]/10 text-[var(--accent)]'
+                          : 'text-[var(--text-muted)] group-hover:text-[var(--accent)]'
+                      )}
+                    >
+                      <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+                    </span>
+
+                    {!collapsed && (
+                      <span className="truncate text-sm">{item.label}</span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Sidebar Controls */}
+        <div
+          className={cn(
+            'shrink-0 border-t border-[var(--border)]',
+            collapsed ? 'p-2' : 'p-3'
+          )}
+        >
+          {!collapsed && (
+            <div className="mb-3 rounded-xl bg-[var(--surface-muted)] px-3 py-3">
+              <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                Workspace
+              </p>
+
+              <p className="mt-1 text-xs font-semibold text-[var(--text-secondary)]">
+                Manage your catalog
+              </p>
+            </div>
+          )}
+
           <button
             type="button"
-            onClick={onClose}
-            aria-label="Close navigation"
-            className="flex h-8 w-8 items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] lg:hidden"
+            onClick={toggleSidebar}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={cn(
+              'flex h-10 w-full items-center rounded-xl',
+              'text-[var(--text-muted)]',
+              'transition-colors duration-200',
+              'hover:bg-[var(--surface-muted)]',
+              'hover:text-[var(--text-primary)]',
+              'focus-visible:outline-none',
+              'focus-visible:ring-2',
+              'focus-visible:ring-[var(--accent)]',
+              collapsed ? 'justify-center' : 'justify-between px-3'
+            )}
           >
-            <X size={18} />
+            {!collapsed && (
+              <span className="text-xs font-semibold">Collapse sidebar</span>
+            )}
+
+            {collapsed ? (
+              <ChevronRight size={17} strokeWidth={1.8} aria-hidden="true" />
+            ) : (
+              <ChevronLeft size={17} strokeWidth={1.8} aria-hidden="true" />
+            )}
           </button>
         </div>
-
-        <nav className="mt-1 space-y-1 lg:mt-0" aria-label="Admin navigation">
-          {navigation.map(({ href, label, icon: Icon }) => {
-            const active =
-              href === '/admin' ? pathname === href : pathname.startsWith(href);
-
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={onClose}
-                aria-current={active ? 'page' : undefined}
-                className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                  active
-                    ? 'bg-[var(--accent)] text-slate-950 shadow-xs font-bold scale-[1.01]'
-                    : 'text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]'
-                }`}
-              >
-                <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
-                <span>{label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 }

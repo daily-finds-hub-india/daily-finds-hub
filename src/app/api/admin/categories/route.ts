@@ -1,156 +1,230 @@
 import { NextResponse } from 'next/server';
+
 import { prisma } from '@/lib/prisma';
 import { requireApiAdmin } from '@/lib/auth/require-api-admin';
-import { categoryCreateSchema } from '@/lib/validation/category';
-
-function createSlug(name: string) {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-export async function GET() {
-  const { response } = await requireApiAdmin();
-
-  if (response) {
-    return response;
-  }
-
-  try {
-    const categories = await prisma.category.findMany({
-      orderBy: {
-        name: 'asc'
-      },
-      include: {
-        images: {
-          orderBy: [{ isPrimary: 'desc' }, { displayOrder: 'asc' }]
-        },
-        _count: {
-          select: {
-            products: true
-          }
-        }
-      }
-    });
-
-    return NextResponse.json({
-      success: true,
-      categories
-    });
-  } catch (error) {
-    console.error('Failed to fetch categories:', error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Failed to fetch categories.'
-      },
-      { status: 500 }
-    );
-  }
-}
+import { apiSuccess } from '@/lib/api/response';
+import { parseJson } from '@/lib/api/parse-json';
+import { validate } from '@/lib/api/validate';
+import { serverError } from '@/lib/api/server-error';
+import {
+  createCategorySchema,
+  categoryQuerySchema
+} from '@/lib/validation/category';
 
 export async function POST(request: Request) {
-  const { response } = await requireApiAdmin();
-
-  if (response) {
-    return response;
-  }
-
   try {
-    const body: unknown = await request.json();
-    const result = categoryCreateSchema.safeParse(body);
+    const adminCheck = await requireApiAdmin(request);
 
-    if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid category data.',
-          errors: result.error.flatten().fieldErrors
-        },
-        { status: 400 }
-      );
+    if (!adminCheck.authorized) {
+      return adminCheck.response;
     }
 
-    const data = result.data;
-    const slug = createSlug(data.name);
+    const parsedBody = await parseJson(request);
 
-    if (!slug) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Category name cannot produce a valid slug.'
-        },
-        { status: 400 }
-      );
+    if (!parsedBody.success) {
+      return parsedBody.response;
     }
+
+    const validation = validate(createCategorySchema, parsedBody.data);
+
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const data = validation.data;
 
     const existingCategory = await prisma.category.findFirst({
       where: {
         OR: [
           {
-            name: {
-              equals: data.name,
-              mode: 'insensitive'
-            }
+            name: data.name
           },
           {
-            slug
+            slug: data.slug
           }
         ]
       },
       select: {
-        id: true
+        id: true,
+        name: true,
+        slug: true
       }
     });
 
     if (existingCategory) {
+      const conflict = existingCategory.slug === data.slug ? 'slug' : 'name';
+
       return NextResponse.json(
         {
-          success: false,
-          message: 'A category with this name already exists.'
+          error: `A category with this ${conflict} already exists`
         },
-        { status: 409 }
+        {
+          status: 409
+        }
       );
     }
 
     const category = await prisma.category.create({
       data: {
         name: data.name,
-        slug,
+        slug: data.slug,
         description: data.description,
         isFeatured: data.isFeatured
       },
-      include: {
-        images: true,
-        _count: {
-          select: {
-            products: true
-          }
-        }
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        isFeatured: true,
+        createdAt: true,
+        updatedAt: true
       }
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        category
-      },
-      { status: 201 }
-    );
+    return apiSuccess(category, 201);
   } catch (error) {
-    console.error('Failed to create category:', error);
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002'
+    ) {
+      return NextResponse.json(
+        {
+          error: 'A category with this name or slug already exists'
+        },
+        {
+          status: 409
+        }
+      );
+    }
 
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Failed to create category.'
-      },
-      { status: 500 }
-    );
+    return serverError(error);
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const adminCheck = await requireApiAdmin(request);
+
+    if (!adminCheck.authorized) {
+      return adminCheck.response;
+    }
+
+    const { searchParams } = new URL(request.url);
+
+    const validation = validate(categoryQuerySchema, {
+      page: searchParams.get('page') ?? undefined,
+      pageSize: searchParams.get('pageSize') ?? undefined,
+      search: searchParams.get('search') ?? undefined,
+      featured: searchParams.get('featured') ?? undefined,
+      sort: searchParams.get('sort') ?? undefined,
+      direction: searchParams.get('direction') ?? undefined
+    });
+
+    if (!validation.success) {
+      return validation.response;
+    }
+
+    const { page, pageSize, search, featured, sort, direction } =
+      validation.data;
+
+    const where = {
+      ...(search
+        ? {
+            OR: [
+              {
+                name: {
+                  contains: search,
+                  mode: 'insensitive' as const
+                }
+              },
+              {
+                description: {
+                  contains: search,
+                  mode: 'insensitive' as const
+                }
+              }
+            ]
+          }
+        : {}),
+
+      ...(featured !== undefined
+        ? {
+            isFeatured: featured === 'true'
+          }
+        : {})
+    };
+
+    const sortField = {
+      newest: 'createdAt',
+      oldest: 'createdAt',
+      name: 'name'
+    }[sort];
+
+    const sortDirection = sort === 'oldest' ? 'asc' : direction;
+
+    const orderBy = {
+      [sortField]: sortDirection
+    };
+
+    const skip = (page - 1) * pageSize;
+
+    const [categories, total] = await prisma.$transaction([
+      prisma.category.findMany({
+        where,
+        orderBy,
+        skip,
+        take: pageSize,
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          isFeatured: true,
+          createdAt: true,
+          updatedAt: true,
+
+          _count: {
+            select: {
+              products: true,
+              images: true
+            }
+          },
+
+          images: {
+            orderBy: {
+              displayOrder: 'asc'
+            },
+            select: {
+              id: true,
+              url: true,
+              altText: true,
+              displayOrder: true,
+              isPrimary: true
+            }
+          }
+        }
+      }),
+
+      prisma.category.count({
+        where
+      })
+    ]);
+
+    const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
+
+    return apiSuccess({
+      items: categories,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages
+      }
+    });
+  } catch (error) {
+    return serverError(error);
   }
 }

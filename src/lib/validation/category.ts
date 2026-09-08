@@ -1,22 +1,64 @@
 import { z } from 'zod';
 
-export const categoryCreateSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Category name is required.')
-    .max(80, 'Category name must be 80 characters or fewer.'),
+import { cuidSchema } from '@/lib/validation/common';
 
-  description: z
-    .string()
-    .trim()
-    .max(300, 'Description must be 300 characters or fewer.')
-    .default(''),
+export const createCategorySchema = z
+  .object({
+    name: z.string().trim().min(1).max(100),
 
-  isFeatured: z.boolean().default(false)
-});
+    slug: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .regex(
+        /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        'Slug must contain only lowercase letters, numbers, and hyphens'
+      ),
 
-export const categoryUpdateSchema = categoryCreateSchema;
+    description: z.string().trim().min(1).max(1000),
 
-export type CategoryCreateInput = z.infer<typeof categoryCreateSchema>;
-export type CategoryUpdateInput = z.infer<typeof categoryUpdateSchema>;
+    isFeatured: z.boolean().default(false)
+  })
+  .strict();
+
+export const updateCategorySchema = z
+  .object({
+    name: z.string().trim().min(1).max(100).optional(),
+
+    slug: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .regex(
+        /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        'Slug must contain only lowercase letters, numbers, and hyphens'
+      )
+      .optional(),
+
+    description: z.string().trim().min(1).max(1000).optional(),
+
+    isFeatured: z.boolean().optional()
+  })
+  .strict();
+
+export const categoryIdSchema = cuidSchema;
+
+export const categoryImageIdSchema = cuidSchema;
+
+export const categoryQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).max(100_000).default(1),
+
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+
+    search: z.string().trim().max(200).optional(),
+
+    featured: z.enum(['true', 'false']).optional(),
+
+    sort: z.enum(['newest', 'oldest', 'name']).default('newest'),
+
+    direction: z.enum(['asc', 'desc']).default('desc')
+  })
+  .strict();

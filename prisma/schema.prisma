@@ -93,8 +93,43 @@ model AdminUser {
   id           String   @id @default(cuid())
   username     String   @unique
   passwordHash String
-  isActive     Boolean  @default(true)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isActive Boolean @default(true)
+
+  failedLoginAttempts Int      @default(0)
+  lockedUntil         DateTime?
+
+  sessionVersion Int @default(0)
+
+  passwordChangedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RateLimit {
+  key        String   @id
+  count      Int      @default(0)
+  windowStart DateTime
+  expiresAt  DateTime
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([expiresAt])
+}
+
+model CloudinaryCleanup {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  resourceType String  @default("image")
+
+  attempts    Int      @default(0)
+  nextRetryAt DateTime @default(now())
+  lastError   String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([nextRetryAt])
 }

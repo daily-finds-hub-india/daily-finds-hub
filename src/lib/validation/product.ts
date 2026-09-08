@@ -1,115 +1,211 @@
 import { z } from 'zod';
 
+import { cuidSchema } from '@/lib/validation/common';
+
+const MAX_PRICE = 99_999_999.99;
+
 const amazonUrlSchema = z
   .string()
   .trim()
-  .max(1000, 'Amazon URL is too long.')
+  .url()
+  .max(2048)
   .refine(
     (value) => {
-      if (!value) return true;
-
       try {
         const url = new URL(value);
-        const hostname = url.hostname.toLowerCase();
 
         return (
           url.protocol === 'https:' &&
-          !url.username &&
-          !url.password &&
-          (hostname === 'amazon.in' || hostname.endsWith('.amazon.in')) &&
-          url.pathname.length > 1
+          (url.hostname === 'amazon.in' || url.hostname === 'www.amazon.in')
         );
       } catch {
         return false;
       }
     },
     {
-      message: 'Enter a valid Amazon.in HTTPS URL.'
+      message: 'Amazon URL must be a valid Amazon.in HTTPS URL'
     }
-  );
+  )
+  .optional();
+
+const amazonUrlUpdateSchema = z
+  .string()
+  .trim()
+  .url()
+  .max(2048)
+  .refine(
+    (value) => {
+      try {
+        const url = new URL(value);
+
+        return (
+          url.protocol === 'https:' &&
+          (url.hostname === 'amazon.in' || url.hostname === 'www.amazon.in')
+        );
+      } catch {
+        return false;
+      }
+    },
+    {
+      message: 'Amazon URL must be a valid Amazon.in HTTPS URL'
+    }
+  )
+  .nullable()
+  .optional();
 
 const asinSchema = z
   .string()
   .trim()
-  .toUpperCase()
-  .regex(/^[A-Z0-9]{10}$/, 'ASIN must contain exactly 10 letters/numbers.');
+  .regex(
+    /^[A-Z0-9]{10}$/,
+    'ASIN must contain exactly 10 uppercase letters or numbers'
+  )
+  .optional();
 
-const productImagesSchema = z.array(
-  z.object({
-    url: z.string().trim().url('Image URL must be valid.'),
-    publicId: z.string().trim().min(1, 'Image public ID is required.'),
-    altText: z.string().trim().max(200, 'Alt text is too long.'),
-    isPrimary: z.boolean()
+const asinUpdateSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^[A-Z0-9]{10}$/,
+    'ASIN must contain exactly 10 uppercase letters or numbers'
+  )
+  .nullable()
+  .optional();
+
+const priceSchema = z.coerce.number().finite().positive().max(MAX_PRICE);
+
+const nullablePriceSchema = z.coerce
+  .number()
+  .finite()
+  .positive()
+  .max(MAX_PRICE)
+  .nullable()
+  .optional();
+
+export const createProductSchema = z
+  .object({
+    name: z.string().trim().min(1).max(200),
+
+    slug: z
+      .string()
+      .trim()
+      .min(1)
+      .max(200)
+      .regex(
+        /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        'Slug must contain only lowercase letters, numbers, and hyphens'
+      ),
+
+    shortDescription: z.string().trim().min(1).max(500),
+
+    description: z.string().trim().min(1).max(20_000),
+
+    categoryId: cuidSchema,
+
+    price: priceSchema,
+
+    originalPrice: priceSchema.optional(),
+
+    rating: z.coerce.number().finite().min(0).max(5).optional(),
+
+    reviewCount: z.coerce.number().int().min(0).max(100_000_000).optional(),
+
+    amazonUrl: amazonUrlSchema,
+
+    asin: asinSchema,
+
+    isFeatured: z.boolean().default(false),
+
+    isTrending: z.boolean().default(false),
+
+    isPublished: z.boolean().default(false)
   })
-);
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.originalPrice !== undefined && data.originalPrice < data.price) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['originalPrice'],
+        message: 'Original price must be greater than or equal to price'
+      });
+    }
+  });
 
-export const productCreateSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Product name is required.')
-    .max(150, 'Product name must be 150 characters or fewer.'),
+export const updateProductSchema = z
+  .object({
+    name: z.string().trim().min(1).max(200).optional(),
 
-  shortDescription: z
-    .string()
-    .trim()
-    .min(1, 'Short description is required.')
-    .max(300, 'Short description must be 300 characters or fewer.'),
+    slug: z
+      .string()
+      .trim()
+      .min(1)
+      .max(200)
+      .regex(
+        /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        'Slug must contain only lowercase letters, numbers, and hyphens'
+      )
+      .optional(),
 
-  description: z
-    .string()
-    .trim()
-    .min(1, 'Description is required.')
-    .max(5000, 'Description must be 5000 characters or fewer.'),
+    shortDescription: z.string().trim().min(1).max(500).optional(),
 
-  categoryId: z.string().trim().min(1, 'Category is required.'),
+    description: z.string().trim().min(1).max(20_000).optional(),
 
-  price: z.coerce
-    .number()
-    .finite('Price must be a valid number.')
-    .min(0, 'Price cannot be negative.')
-    .max(99999999.99, 'Price is too large.'),
+    categoryId: cuidSchema.optional(),
 
-  originalPrice: z
-    .union([
-      z.literal(''),
-      z.coerce
-        .number()
-        .finite('Original price must be a valid number.')
-        .min(0, 'Original price cannot be negative.')
-        .max(99999999.99, 'Original price is too large.')
-    ])
-    .transform((value) => (value === '' ? null : value)),
+    price: priceSchema.optional(),
 
-  rating: z.coerce
-    .number()
-    .finite('Rating must be a valid number.')
-    .min(0, 'Rating cannot be below 0.')
-    .max(5, 'Rating cannot be above 5.'),
+    originalPrice: nullablePriceSchema,
 
-  reviewCount: z.coerce
-    .number()
-    .int('Review count must be a whole number.')
-    .min(0, 'Review count cannot be negative.')
-    .max(999999999, 'Review count is too large.'),
+    rating: z.coerce.number().finite().min(0).max(5).nullable().optional(),
 
-  amazonUrl: amazonUrlSchema,
+    reviewCount: z.coerce.number().int().min(0).max(100_000_000).optional(),
 
-  asin: z
-    .union([asinSchema, z.literal('')])
-    .transform((value) => (value === '' ? null : value)),
+    amazonUrl: amazonUrlUpdateSchema,
 
-  isFeatured: z.boolean().default(false),
+    asin: asinUpdateSchema,
 
-  isTrending: z.boolean().default(false),
+    isFeatured: z.boolean().optional(),
 
-  isPublished: z.boolean().default(false),
+    isTrending: z.boolean().optional(),
 
-  images: productImagesSchema.default([])
-});
+    isPublished: z.boolean().optional()
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    if (
+      data.originalPrice !== undefined &&
+      data.originalPrice !== null &&
+      data.price !== undefined &&
+      data.originalPrice < data.price
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['originalPrice'],
+        message: 'Original price must be greater than or equal to price'
+      });
+    }
+  });
 
-export const productUpdateSchema = productCreateSchema;
+export const productIdSchema = cuidSchema;
 
-export type ProductCreateInput = z.infer<typeof productCreateSchema>;
+export const productQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).max(100_000).default(1),
 
-export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+
+    search: z.string().trim().max(200).optional(),
+
+    categoryId: cuidSchema.optional(),
+
+    featured: z.enum(['true', 'false']).optional(),
+
+    trending: z.enum(['true', 'false']).optional(),
+
+    sort: z
+      .enum(['newest', 'oldest', 'name', 'price', 'rating'])
+      .default('newest'),
+
+    direction: z.enum(['asc', 'desc']).default('desc')
+  })
+  .strict();
