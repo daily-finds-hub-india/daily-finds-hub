@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-
 import { prisma } from '@/lib/prisma';
 import { validate } from '@/lib/api/validate';
 import { serverError } from '@/lib/api/server-error';
@@ -22,6 +21,7 @@ export async function GET(request: NextRequest) {
       validation.data;
 
     const where = {
+      isPublished: true, // Only expose published categories publicly
       ...(search
         ? {
             OR: [
@@ -49,11 +49,7 @@ export async function GET(request: NextRequest) {
     };
 
     const orderBy =
-      sort === 'name'
-        ? { name: direction }
-        : sort === 'oldest'
-          ? { createdAt: direction }
-          : { createdAt: direction };
+      sort === 'name' ? { name: direction } : { createdAt: direction };
 
     const skip = (page - 1) * pageSize;
 
@@ -104,7 +100,7 @@ export async function GET(request: NextRequest) {
       })
     ]);
 
-    const totalPages = Math.ceil(total / pageSize);
+    const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
 
     const data = categories.map((category) => ({
       id: category.id,

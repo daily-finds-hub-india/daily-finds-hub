@@ -20,13 +20,13 @@ export function CategoryTable({
             <th scope="col" className="px-5 py-3.5">
               Category
             </th>
-            <th scope="col" className="px-4 py-3.5">
+            <th scope="col" className="px-4 py-3.5 text-center">
               Products
             </th>
-            <th scope="col" className="px-4 py-3.5">
+            <th scope="col" className="px-4 py-3.5 text-center">
               Status
             </th>
-            <th scope="col" className="px-4 py-3.5">
+            <th scope="col" className="px-4 py-3.5 text-center">
               Spotlight
             </th>
             <th scope="col" className="px-5 py-3.5 text-center">

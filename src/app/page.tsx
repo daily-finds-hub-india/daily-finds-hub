@@ -1,4 +1,6 @@
-import { getPublicCategories, getPublicProducts } from '@/lib/queries/public';
+// src/app/page.tsx
+import { getPublicProductsList } from '@/lib/services/public-product';
+import { getPublicCategoriesList } from '@/lib/services/public-category';
 
 import { CategoriesSection } from '@/components/home/CategoriesSection';
 import { DiscoveryCta } from '@/components/home/DiscoveryCta';
@@ -7,32 +9,34 @@ import { Hero } from '@/components/home/Hero';
 import { TrendingSection } from '@/components/home/TrendingSection';
 
 export default async function Home() {
-  const [featuredProducts, trendingProducts, categories] = await Promise.all([
-    getPublicProducts({
-      sort: 'featured',
-      take: 6
-    }),
-
-    getPublicProducts({
-      sort: 'trending',
-      take: 6
-    }),
-
-    getPublicCategories({
+  const [featuredResult, trendingResult, categories] = await Promise.all([
+    getPublicProductsList({
       featured: true,
-      take: 6
-    })
+      pageSize: 6
+    }),
+
+    getPublicProductsList({
+      trending: true,
+      pageSize: 6
+    }),
+
+    getPublicCategoriesList()
   ]);
+
+  // Filter or slice categories if your UI expects a limited featured set
+  const featuredCategories = categories
+    .filter((cat) => cat.isFeatured)
+    .slice(0, 6);
 
   return (
     <main>
       <Hero />
 
-      <FeaturedSection products={featuredProducts} />
+      <FeaturedSection products={featuredResult.items} />
 
-      <CategoriesSection categories={categories} />
+      <CategoriesSection categories={featuredCategories} />
 
-      <TrendingSection products={trendingProducts} />
+      <TrendingSection products={trendingResult.items} />
 
       <DiscoveryCta />
     </main>

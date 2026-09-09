@@ -1,16 +1,20 @@
-import { z } from 'zod';
-
 import { prisma } from '@/lib/prisma';
-import { scheduleCloudinaryCleanup } from '@/lib/cloudinary/cleanup';
 import { requireApiAdmin } from '@/lib/auth/require-api-admin';
-import { apiError, apiSuccess } from '@/lib/api/response';
+import { checkAdminApiRateLimit } from '@/lib/security/admin-api-rate-limit';
+import { validateSameOrigin } from '@/lib/security/csrf';
+import { apiError, apiSuccess, apiRateLimitError } from '@/lib/api/response';
 import { parseJson } from '@/lib/api/parse-json';
 import { validate } from '@/lib/api/validate';
 import { serverError } from '@/lib/api/server-error';
 import { deleteCloudinaryImage } from '@/lib/cloudinary/images';
 import {
+  scheduleCloudinaryCleanup,
+  removeCleanupRecord
+} from '@/lib/cloudinary/cleanup';
+import {
   productIdSchema,
-  productImageIdSchema
+  productImageIdSchema,
+  updateProductImageSchema
 } from '@/lib/validation/product';
 
 interface RouteContext {
@@ -20,153 +24,66 @@ interface RouteContext {
   }>;
 }
 
-const MAX_ALT_TEXT_LENGTH = 300;
-
-const updateProductImageSchema = z
-  .object({
-    altText: z.string().trim().min(1).max(MAX_ALT_TEXT_LENGTH).optional(),
-    displayOrder: z.number().int().min(0).max(1000).optional(),
-    isPrimary: z.boolean().optional()
-  })
-  .strict();
-
-function isPrismaUniqueConstraintError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'P2002'
-  );
-}
-
-function isPrismaNotFoundError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'P2025'
-  );
-}
-
 export async function PATCH(request: Request, context: RouteContext) {
   try {
     const adminCheck = await requireApiAdmin(request);
+    if (!adminCheck.authorized) return adminCheck.response;
 
-    if (!adminCheck.authorized) {
-      return adminCheck.response;
-    }
+    const rateLimit = await checkAdminApiRateLimit(adminCheck.admin.id);
+    if (!rateLimit.allowed) return apiRateLimitError();
+
+    const csrf = validateSameOrigin(request);
+    if (!csrf.allowed) return csrf.response;
 
     const { id, imageId } = await context.params;
 
     const productIdValidation = productIdSchema.safeParse(id);
-
-    if (!productIdValidation.success) {
+    if (!productIdValidation.success)
       return apiError('Invalid product ID', 400);
-    }
 
     const imageIdValidation = productImageIdSchema.safeParse(imageId);
-
-    if (!imageIdValidation.success) {
-      return apiError('Invalid image ID', 400);
-    }
+    if (!imageIdValidation.success) return apiError('Invalid image ID', 400);
 
     const parsedBody = await parseJson(request);
-
-    if (!parsedBody.success) {
-      return parsedBody.response;
-    }
+    if (!parsedBody.success) return parsedBody.response;
 
     const validation = validate(updateProductImageSchema, parsedBody.data);
-
-    if (!validation.success) {
-      return validation.response;
-    }
+    if (!validation.success) return validation.response;
 
     const data = validation.data;
-
-    if (Object.keys(data).length === 0) {
+    if (Object.keys(data).length === 0)
       return apiError('No fields provided for update', 400);
-    }
 
     const existingImage = await prisma.productImage.findFirst({
       where: {
         id: imageIdValidation.data,
         productId: productIdValidation.data
       },
-      select: {
-        id: true,
-        productId: true,
-        url: true,
-        publicId: true,
-        altText: true,
-        displayOrder: true,
-        isPrimary: true
-      }
+      select: { id: true, productId: true }
     });
 
-    if (!existingImage) {
-      return apiError('Product image not found', 404);
-    }
+    if (!existingImage) return apiError('Product image not found', 404);
 
     try {
       const image = await prisma.$transaction(async (tx) => {
-        /*
-         * Serialize primary-image changes for this product.
-         *
-         * This uses the same lock namespace as the product
-         * image creation endpoint.
-         */
         if (data.isPrimary === true) {
           await tx.$executeRaw`
-            SELECT pg_advisory_xact_lock(
-              hashtextextended(
-                ${`daily-finds-hub:product-images:${existingImage.productId}`},
-                0
-              )
-            )
+            SELECT pg_advisory_xact_lock(hashtextextended(${`daily-finds-hub:product-images:${existingImage.productId}`}, 0))
           `;
 
-          /*
-           * Make every other image non-primary before making
-           * this image primary.
-           */
           await tx.productImage.updateMany({
             where: {
               productId: existingImage.productId,
-              id: {
-                not: existingImage.id
-              },
+              id: { not: existingImage.id },
               isPrimary: true
             },
-            data: {
-              isPrimary: false
-            }
+            data: { isPrimary: false }
           });
         }
 
-        const updateData: {
-          altText?: string;
-          displayOrder?: number;
-          isPrimary?: boolean;
-        } = {};
-
-        if (data.altText !== undefined) {
-          updateData.altText = data.altText;
-        }
-
-        if (data.displayOrder !== undefined) {
-          updateData.displayOrder = data.displayOrder;
-        }
-
-        if (data.isPrimary !== undefined) {
-          updateData.isPrimary = data.isPrimary;
-        }
-
         return tx.productImage.update({
-          where: {
-            id: existingImage.id
-          },
-          data: updateData,
+          where: { id: existingImage.id },
+          data,
           select: {
             id: true,
             productId: true,
@@ -181,12 +98,24 @@ export async function PATCH(request: Request, context: RouteContext) {
       });
 
       return apiSuccess(image);
-    } catch (error) {
-      if (isPrismaUniqueConstraintError(error)) {
+    } catch (error: unknown) {
+      const isPrismaConflict =
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'P2002';
+
+      if (isPrismaConflict) {
         return apiError('Product can have only one primary image', 409);
       }
 
-      if (isPrismaNotFoundError(error)) {
+      const isPrismaNotFound =
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'P2025';
+
+      if (isPrismaNotFound) {
         return apiError('Product image not found', 404);
       }
 
@@ -199,70 +128,49 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(request: Request, context: RouteContext) {
   try {
-    const authResult = await requireApiAdmin(request);
+    const adminCheck = await requireApiAdmin(request);
+    if (!adminCheck.authorized) return adminCheck.response;
 
-    if (!authResult.authorized) {
-      return authResult.response;
-    }
+    const rateLimit = await checkAdminApiRateLimit(adminCheck.admin.id);
+    if (!rateLimit.allowed) return apiRateLimitError();
+
+    const csrf = validateSameOrigin(request);
+    if (!csrf.allowed) return csrf.response;
 
     const { id, imageId } = await context.params;
 
     const productIdValidation = productIdSchema.safeParse(id);
-
-    if (!productIdValidation.success) {
+    if (!productIdValidation.success)
       return apiError('Invalid product ID', 400);
-    }
 
     const imageIdValidation = productImageIdSchema.safeParse(imageId);
-
-    if (!imageIdValidation.success) {
-      return apiError('Invalid image ID', 400);
-    }
+    if (!imageIdValidation.success) return apiError('Invalid image ID', 400);
 
     const existingImage = await prisma.productImage.findFirst({
       where: {
         id: imageIdValidation.data,
         productId: productIdValidation.data
       },
-      select: {
-        id: true,
-        publicId: true
-      }
+      select: { id: true, publicId: true }
     });
 
-    if (!existingImage) {
-      return apiError('Product image not found', 404);
-    }
+    if (!existingImage) return apiError('Product image not found', 404);
 
-    /*
-     * PostgreSQL is the source of truth.
-     *
-     * Once this succeeds, the application no longer references
-     * the image. Cloudinary cleanup is performed afterward.
-     */
     await prisma.productImage.delete({
-      where: {
-        id: existingImage.id
-      }
+      where: { id: existingImage.id }
     });
 
     try {
       await deleteCloudinaryImage(existingImage.publicId);
-
-      await prisma.cloudinaryCleanup.deleteMany({
-        where: {
-          publicId: existingImage.publicId
-        }
-      });
+      await removeCleanupRecord(existingImage.publicId);
     } catch (cloudinaryError) {
-      await scheduleCloudinaryCleanup(existingImage.publicId, cloudinaryError);
-
-      console.error('[CLOUDINARY_CLEANUP_SCHEDULED]', cloudinaryError);
+      await scheduleCloudinaryCleanup(
+        existingImage.publicId,
+        cloudinaryError
+      ).catch((e) => console.error('[CLOUDINARY_CLEANUP_SCHEDULE_FAILED]', e));
     }
 
-    return apiSuccess({
-      message: 'Product image deleted successfully'
-    });
+    return apiSuccess({ message: 'Product image deleted successfully' });
   } catch (error) {
     return serverError(error);
   }

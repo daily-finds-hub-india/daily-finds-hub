@@ -20,14 +20,14 @@ const adminNavigation = [
     icon: LayoutDashboard
   },
   {
-    label: 'Products',
-    href: '/admin/products',
-    icon: Package
-  },
-  {
     label: 'Categories',
     href: '/admin/categories',
     icon: Tags
+  },
+  {
+    label: 'Products',
+    href: '/admin/products',
+    icon: Package
   }
 ];
 

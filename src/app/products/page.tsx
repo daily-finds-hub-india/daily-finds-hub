@@ -4,7 +4,7 @@ import { ProductGrid } from '@/components/products/ProductGrid';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { prisma } from '@/lib/prisma';
-import { getPublicProducts } from '@/lib/queries/public';
+import { getPublicProductsList } from '@/lib/services/public-product';
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -13,6 +13,9 @@ interface ProductsPageProps {
     search?: string;
   }>;
 }
+
+const VALID_SORTS = ['newest', 'oldest', 'name', 'price', 'rating'] as const;
+type SortType = (typeof VALID_SORTS)[number];
 
 export default async function ProductsPage({
   searchParams
@@ -29,11 +32,17 @@ export default async function ProductsPage({
     }
   });
 
-  const products = await getPublicProducts({
+  const sortParam: SortType = VALID_SORTS.includes(params.sort as SortType)
+    ? (params.sort as SortType)
+    : 'newest';
+
+  const productResult = await getPublicProductsList({
     categoryId: params.category,
-    sort: params.sort,
+    sort: sortParam,
     search: params.search
   });
+
+  const products = productResult.items;
 
   const searchHeading = params.search
     ? `Finds for "${params.search}"`

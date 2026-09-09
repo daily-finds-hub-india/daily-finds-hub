@@ -33,7 +33,7 @@ export function CategoryTableRow({
       </td>
 
       {/* 2. Product Count Badge */}
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 text-center">
         <div className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--surface-muted)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-secondary)]">
           <Package size={13} className="text-[var(--text-muted)]" />
           <span>{category.productCount}</span>
@@ -41,13 +41,13 @@ export function CategoryTableRow({
       </td>
 
       {/* 3. Published Status */}
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 text-center">
         <StatusBadge published={category.isPublished} />
       </td>
 
       {/* 4. Badges (Featured) */}
       <td className="px-4 py-3">
-        <div className="flex items-center gap-1.5">
+        <div className="flex justify-center items-center gap-1.5">
           {category.isFeatured ? (
             <span
               title="Featured"
@@ -64,7 +64,7 @@ export function CategoryTableRow({
       </td>
 
       {/* 5. Action Menu */}
-      <td className="px-4 py-3 text-right">
+      <td className="px-4 py-3 flex justify-center">
         <CategoryActionMenu onEdit={onEdit} onDelete={onDelete} />
       </td>
     </tr>

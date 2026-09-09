@@ -31,13 +31,13 @@ export function ProductTableRow({
         </div>
       </td>
 
-      <td className="px-4 py-4">
+      <td className="px-4 py-4 text-center">
         <span className="rounded-lg bg-[var(--surface-muted)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text-secondary)]">
           {product.categoryName}
         </span>
       </td>
 
-      <td className="px-4 py-4">
+      <td className="px-4 py-4 text-center">
         <div>
           <p className="text-sm font-bold text-[var(--text-primary)]">
             ₹{product.price.toLocaleString('en-IN')}
@@ -51,7 +51,7 @@ export function ProductTableRow({
         </div>
       </td>
 
-      <td className="px-4 py-4">
+      <td className="px-4 py-4  text-center">
         {product.rating !== null ? (
           <div className="flex items-center gap-1.5">
             <span className="text-sm font-bold text-[var(--text-primary)]">
@@ -67,12 +67,12 @@ export function ProductTableRow({
         )}
       </td>
 
-      <td className="px-4 py-4">
+      <td className="px-4 py-4  text-center">
         <StatusBadge published={product.isPublished} />
       </td>
 
       <td className="px-4 py-4">
-        <div className="flex items-center gap-1.5">
+        <div className="flex justify-center items-center gap-1.5">
           {product.isFeatured ? (
             <span
               title="Featured"
@@ -99,7 +99,7 @@ export function ProductTableRow({
         </div>
       </td>
 
-      <td className="px-4 py-4 text-right">
+      <td className="px-4 py-4 flex justify-center">
         <ProductActionMenu onEdit={onEdit} onDelete={onDelete} />
       </td>
     </tr>

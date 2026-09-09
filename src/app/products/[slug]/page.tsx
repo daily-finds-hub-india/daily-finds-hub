@@ -1,9 +1,10 @@
+// src/app/products/[slug]/page.tsx
 import { notFound } from 'next/navigation';
 
 import { Container } from '@/components/layout/Container';
 import { ProductDetails } from '@/components/products/ProductDetails';
 import { Section } from '@/components/ui/Section';
-import { getPublicProductBySlug } from '@/lib/queries/public';
+import { getPublicProductBySlug } from '@/lib/services/public-product';
 
 interface ProductPageProps {
   params: Promise<{

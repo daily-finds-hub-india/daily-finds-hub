@@ -19,9 +19,10 @@ export async function GET(_request: Request, { params }: RouteContext) {
       return apiError('Invalid category ID', 400);
     }
 
-    const category = await prisma.category.findUnique({
+    const category = await prisma.category.findFirst({
       where: {
-        id: idValidation.data
+        id: idValidation.data,
+        isPublished: true
       },
 
       select: {
@@ -110,11 +111,8 @@ export async function GET(_request: Request, { params }: RouteContext) {
       slug: category.slug,
       description: category.description,
       isFeatured: category.isFeatured,
-
       images: category.images,
-
       productCount: category._count.products,
-
       products: category.products
     };
 

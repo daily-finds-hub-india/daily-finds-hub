@@ -16,7 +16,19 @@ export interface Product {
   isTrending: boolean;
   isPublished: boolean;
   imageUrl: string | null;
+  imagePublicId?: string | null;
+  images?: ProductImageItem[];
   createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ProductImageItem {
+  id?: string;
+  url: string;
+  publicId?: string;
+  altText?: string;
+  isPrimary: boolean;
+  displayOrder: number;
 }
 
 export interface ProductFormData {

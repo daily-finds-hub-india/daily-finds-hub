@@ -3,7 +3,7 @@ import { Container } from '@/components/layout/Container';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { getPublicCategories } from '@/lib/queries/public';
+import { getPublicCategoriesList } from '@/lib/services/public-category';
 
 export const metadata = {
   title: 'Categories',
@@ -12,8 +12,8 @@ export const metadata = {
 };
 
 export default async function CategoriesPage() {
-  const categories = await getPublicCategories();
-
+  const categories = await getPublicCategoriesList();
+  console.log(categories);
   return (
     <main>
       <Section>

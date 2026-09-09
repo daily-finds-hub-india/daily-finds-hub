@@ -41,64 +41,6 @@ async function cleanupCategoryCloudinaryImages(
   }
 }
 
-export async function GET(request: Request, context: RouteContext) {
-  try {
-    const adminCheck = await requireApiAdmin(request);
-    if (!adminCheck.authorized) return adminCheck.response;
-
-    const { id } = await context.params;
-    const idValidation = categoryIdSchema.safeParse(id);
-    if (!idValidation.success) return apiError('Invalid category ID', 400);
-
-    const category = await prisma.category.findUnique({
-      where: { id: idValidation.data },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        isFeatured: true,
-        isPublished: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: { select: { products: true, images: true } },
-        images: {
-          orderBy: { displayOrder: 'asc' },
-          select: {
-            id: true,
-            url: true,
-            publicId: true,
-            altText: true,
-            displayOrder: true,
-            isPrimary: true,
-            createdAt: true
-          }
-        },
-        products: {
-          orderBy: { createdAt: 'desc' },
-          take: 20,
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            price: true,
-            originalPrice: true,
-            isPublished: true,
-            isFeatured: true,
-            isTrending: true
-          }
-        }
-      }
-    });
-
-    if (!category) return apiError('Category not found', 404);
-
-    return apiSuccess(category);
-  } catch (error: unknown) {
-    return serverError(error);
-  }
-}
-
 export async function PATCH(request: Request, context: RouteContext) {
   try {
     const adminCheck = await requireApiAdmin(request);

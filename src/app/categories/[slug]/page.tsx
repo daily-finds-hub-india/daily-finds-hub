@@ -7,7 +7,7 @@ import { Container } from '@/components/layout/Container';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { Section } from '@/components/ui/Section';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { getPublicCategoryBySlug } from '@/lib/queries/public';
+import { getPublicCategoryBySlug } from '@/lib/services/public-category';
 
 interface CategoryPageProps {
   params: Promise<{
@@ -29,7 +29,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <Section>
         <Container>
           <Link
-            href="/category"
+            href="/categories"
             className="group mb-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] transition-colors hover:text-[var(--accent)]"
           >
             <ArrowLeft
