@@ -1,11 +1,12 @@
 'use client';
 
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { Category } from '@/types/category';
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   category: Category | null;
+  isLoading?: boolean;
   onClose: () => void;
   onConfirm: () => void;
 }
@@ -13,6 +14,7 @@ interface DeleteConfirmModalProps {
 export function DeleteConfirmModal({
   isOpen,
   category,
+  isLoading = false,
   onClose,
   onConfirm
 }: DeleteConfirmModalProps) {
@@ -22,7 +24,7 @@ export function DeleteConfirmModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-xs"
-        onClick={onClose}
+        onClick={isLoading ? undefined : onClose}
       />
 
       <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl sm:p-6">
@@ -47,17 +49,26 @@ export function DeleteConfirmModal({
         <div className="mt-5 flex items-center justify-end gap-2.5">
           <button
             type="button"
+            disabled={isLoading}
             onClick={onClose}
-            className="h-9 rounded-xl border border-[var(--border)] px-4 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] transition-colors"
+            className="h-9 rounded-xl border border-[var(--border)] px-4 text-xs font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)] disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="button"
+            disabled={isLoading}
             onClick={onConfirm}
-            className="h-9 rounded-xl bg-rose-600 px-4 text-xs font-bold text-white hover:bg-rose-700 transition-colors"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 text-xs font-bold text-white transition-colors hover:bg-rose-700 disabled:opacity-50"
           >
-            Delete
+            {isLoading ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                <span>Deleting...</span>
+              </>
+            ) : (
+              <span>Delete</span>
+            )}
           </button>
         </div>
       </div>

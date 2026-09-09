@@ -2,9 +2,10 @@ import { cloudinary } from '@/lib/cloudinary/server';
 
 const MAX_PUBLIC_ID_LENGTH = 500;
 
-export async function verifyCloudinaryCategoryImage(
+export async function verifyCloudinaryAsset(
   publicId: string,
-  categoryId: string
+  entityType: 'categories' | 'products',
+  entityId: string
 ) {
   const normalizedPublicId = publicId.trim();
 
@@ -16,10 +17,12 @@ export async function verifyCloudinaryCategoryImage(
     throw new Error('Cloudinary public ID is too long');
   }
 
-  const expectedFolder = `daily-finds-hub/categories/${categoryId}/`;
+  const expectedFolder = `daily-finds-hub/${entityType}/${entityId}/`;
 
   if (!normalizedPublicId.startsWith(expectedFolder)) {
-    throw new Error('Invalid Cloudinary image reference');
+    throw new Error(
+      `Invalid Cloudinary image reference. Must belong to ${expectedFolder}`
+    );
   }
 
   try {
@@ -46,7 +49,7 @@ export async function verifyCloudinaryCategoryImage(
   } catch (error) {
     if (error instanceof Error) {
       if (
-        error.message === 'Invalid Cloudinary image reference' ||
+        error.message.includes('Invalid Cloudinary image reference') ||
         error.message === 'Cloudinary asset is not an image' ||
         error.message === 'Cloudinary public ID mismatch' ||
         error.message === 'Cloudinary image URL is unavailable'

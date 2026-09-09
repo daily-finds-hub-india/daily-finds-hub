@@ -2,10 +2,7 @@ import { z } from 'zod';
 
 import { apiError } from '@/lib/api/response';
 
-export function validate<T>(
-  schema: z.ZodType<T>,
-  data: unknown
-) {
+export function validate<T>(schema: z.ZodType<T>, data: unknown) {
   const result = schema.safeParse(data);
 
   if (!result.success) {

@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
-
 import { prisma } from '@/lib/prisma';
 import { requireApiAdmin } from '@/lib/auth/require-api-admin';
-import { apiSuccess } from '@/lib/api/response';
+import { checkAdminApiRateLimit } from '@/lib/security/admin-api-rate-limit';
+import { validateSameOrigin } from '@/lib/security/csrf';
+import { apiSuccess, apiError, apiRateLimitError } from '@/lib/api/response';
 import { parseJson } from '@/lib/api/parse-json';
 import { validate } from '@/lib/api/validate';
 import { serverError } from '@/lib/api/server-error';
@@ -14,54 +14,32 @@ import {
 export async function POST(request: Request) {
   try {
     const adminCheck = await requireApiAdmin(request);
+    if (!adminCheck.authorized) return adminCheck.response;
 
-    if (!adminCheck.authorized) {
-      return adminCheck.response;
-    }
+    const rateLimit = await checkAdminApiRateLimit(adminCheck.admin.id);
+    if (!rateLimit.allowed) return apiRateLimitError();
+
+    const csrf = validateSameOrigin(request);
+    if (!csrf.allowed) return csrf.response;
 
     const parsedBody = await parseJson(request);
-
-    if (!parsedBody.success) {
-      return parsedBody.response;
-    }
+    if (!parsedBody.success) return parsedBody.response;
 
     const validation = validate(createCategorySchema, parsedBody.data);
-
-    if (!validation.success) {
-      return validation.response;
-    }
+    if (!validation.success) return validation.response;
 
     const data = validation.data;
 
     const existingCategory = await prisma.category.findFirst({
       where: {
-        OR: [
-          {
-            name: data.name
-          },
-          {
-            slug: data.slug
-          }
-        ]
+        OR: [{ name: data.name }, { slug: data.slug }]
       },
-      select: {
-        id: true,
-        name: true,
-        slug: true
-      }
+      select: { id: true, name: true, slug: true }
     });
 
     if (existingCategory) {
       const conflict = existingCategory.slug === data.slug ? 'slug' : 'name';
-
-      return NextResponse.json(
-        {
-          error: `A category with this ${conflict} already exists`
-        },
-        {
-          status: 409
-        }
-      );
+      return apiError(`A category with this ${conflict} already exists`, 409);
     }
 
     const category = await prisma.category.create({
@@ -69,7 +47,8 @@ export async function POST(request: Request) {
         name: data.name,
         slug: data.slug,
         description: data.description,
-        isFeatured: data.isFeatured
+        isFeatured: data.isFeatured,
+        isPublished: data.isPublished
       },
       select: {
         id: true,
@@ -77,27 +56,22 @@ export async function POST(request: Request) {
         slug: true,
         description: true,
         isFeatured: true,
+        isPublished: true,
         createdAt: true,
         updatedAt: true
       }
     });
 
     return apiSuccess(category, 201);
-  } catch (error) {
-    if (
+  } catch (error: unknown) {
+    const isPrismaConflict =
       typeof error === 'object' &&
       error !== null &&
       'code' in error &&
-      error.code === 'P2002'
-    ) {
-      return NextResponse.json(
-        {
-          error: 'A category with this name or slug already exists'
-        },
-        {
-          status: 409
-        }
-      );
+      error.code === 'P2002';
+
+    if (isPrismaConflict) {
+      return apiError('A category with this name or slug already exists', 409);
     }
 
     return serverError(error);
@@ -107,10 +81,7 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const adminCheck = await requireApiAdmin(request);
-
-    if (!adminCheck.authorized) {
-      return adminCheck.response;
-    }
+    if (!adminCheck.authorized) return adminCheck.response;
 
     const { searchParams } = new URL(request.url);
 
@@ -123,9 +94,7 @@ export async function GET(request: Request) {
       direction: searchParams.get('direction') ?? undefined
     });
 
-    if (!validation.success) {
-      return validation.response;
-    }
+    if (!validation.success) return validation.response;
 
     const { page, pageSize, search, featured, sort, direction } =
       validation.data;
@@ -134,27 +103,14 @@ export async function GET(request: Request) {
       ...(search
         ? {
             OR: [
+              { name: { contains: search, mode: 'insensitive' as const } },
               {
-                name: {
-                  contains: search,
-                  mode: 'insensitive' as const
-                }
-              },
-              {
-                description: {
-                  contains: search,
-                  mode: 'insensitive' as const
-                }
+                description: { contains: search, mode: 'insensitive' as const }
               }
             ]
           }
         : {}),
-
-      ...(featured !== undefined
-        ? {
-            isFeatured: featured === 'true'
-          }
-        : {})
+      ...(featured !== undefined ? { isFeatured: featured === 'true' } : {})
     };
 
     const sortField = {
@@ -164,11 +120,7 @@ export async function GET(request: Request) {
     }[sort];
 
     const sortDirection = sort === 'oldest' ? 'asc' : direction;
-
-    const orderBy = {
-      [sortField]: sortDirection
-    };
-
+    const orderBy = { [sortField]: sortDirection };
     const skip = (page - 1) * pageSize;
 
     const [categories, total] = await prisma.$transaction([
@@ -183,20 +135,14 @@ export async function GET(request: Request) {
           slug: true,
           description: true,
           isFeatured: true,
+          isPublished: true,
           createdAt: true,
           updatedAt: true,
-
           _count: {
-            select: {
-              products: true,
-              images: true
-            }
+            select: { products: true, images: true }
           },
-
           images: {
-            orderBy: {
-              displayOrder: 'asc'
-            },
+            orderBy: { displayOrder: 'asc' },
             select: {
               id: true,
               url: true,
@@ -207,24 +153,16 @@ export async function GET(request: Request) {
           }
         }
       }),
-
-      prisma.category.count({
-        where
-      })
+      prisma.category.count({ where })
     ]);
 
     const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
 
     return apiSuccess({
       items: categories,
-      pagination: {
-        page,
-        pageSize,
-        total,
-        totalPages
-      }
+      pagination: { page, pageSize, total, totalPages }
     });
-  } catch (error) {
+  } catch (error: unknown) {
     return serverError(error);
   }
 }

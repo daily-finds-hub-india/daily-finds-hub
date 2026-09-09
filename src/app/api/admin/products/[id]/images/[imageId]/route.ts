@@ -1,16 +1,12 @@
-import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { prisma } from '@/lib/prisma';
-
 import { scheduleCloudinaryCleanup } from '@/lib/cloudinary/cleanup';
-
 import { requireApiAdmin } from '@/lib/auth/require-api-admin';
 import { apiError, apiSuccess } from '@/lib/api/response';
 import { parseJson } from '@/lib/api/parse-json';
 import { validate } from '@/lib/api/validate';
 import { serverError } from '@/lib/api/server-error';
-import { cuidSchema } from '@/lib/validation/common';
 import { deleteCloudinaryImage } from '@/lib/cloudinary/images';
 import {
   productIdSchema,
@@ -29,9 +25,7 @@ const MAX_ALT_TEXT_LENGTH = 300;
 const updateProductImageSchema = z
   .object({
     altText: z.string().trim().min(1).max(MAX_ALT_TEXT_LENGTH).optional(),
-
     displayOrder: z.number().int().min(0).max(1000).optional(),
-
     isPrimary: z.boolean().optional()
   })
   .strict();
@@ -64,30 +58,16 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     const { id, imageId } = await context.params;
 
-    const productIdValidation = cuidSchema.safeParse(id);
+    const productIdValidation = productIdSchema.safeParse(id);
 
     if (!productIdValidation.success) {
-      return NextResponse.json(
-        {
-          error: 'Invalid product ID'
-        },
-        {
-          status: 400
-        }
-      );
+      return apiError('Invalid product ID', 400);
     }
 
-    const imageIdValidation = cuidSchema.safeParse(imageId);
+    const imageIdValidation = productImageIdSchema.safeParse(imageId);
 
     if (!imageIdValidation.success) {
-      return NextResponse.json(
-        {
-          error: 'Invalid image ID'
-        },
-        {
-          status: 400
-        }
-      );
+      return apiError('Invalid image ID', 400);
     }
 
     const parsedBody = await parseJson(request);
@@ -105,14 +85,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const data = validation.data;
 
     if (Object.keys(data).length === 0) {
-      return NextResponse.json(
-        {
-          error: 'No fields provided for update'
-        },
-        {
-          status: 400
-        }
-      );
+      return apiError('No fields provided for update', 400);
     }
 
     const existingImage = await prisma.productImage.findFirst({
@@ -132,14 +105,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     });
 
     if (!existingImage) {
-      return NextResponse.json(
-        {
-          error: 'Product image not found'
-        },
-        {
-          status: 404
-        }
-      );
+      return apiError('Product image not found', 404);
     }
 
     try {
@@ -217,25 +183,11 @@ export async function PATCH(request: Request, context: RouteContext) {
       return apiSuccess(image);
     } catch (error) {
       if (isPrismaUniqueConstraintError(error)) {
-        return NextResponse.json(
-          {
-            error: 'Product can have only one primary image'
-          },
-          {
-            status: 409
-          }
-        );
+        return apiError('Product can have only one primary image', 409);
       }
 
       if (isPrismaNotFoundError(error)) {
-        return NextResponse.json(
-          {
-            error: 'Product image not found'
-          },
-          {
-            status: 404
-          }
-        );
+        return apiError('Product image not found', 404);
       }
 
       throw error;
@@ -245,7 +197,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(request: Request, { params }: RouteContext) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
     const authResult = await requireApiAdmin(request);
 
@@ -253,7 +205,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
       return authResult.response;
     }
 
-    const { id, imageId } = await params;
+    const { id, imageId } = await context.params;
 
     const productIdValidation = productIdSchema.safeParse(id);
 

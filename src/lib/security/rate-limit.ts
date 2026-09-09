@@ -39,7 +39,7 @@ export async function rateLimit({
   try {
     const rows = await prisma.$queryRaw<
       Array<{
-        count: number;
+        count: number | bigint;
         expires_at: Date;
       }>
     >`
@@ -88,18 +88,18 @@ export async function rateLimit({
       throw new Error('Rate-limit operation returned no result');
     }
 
-    const count = Number(row.count);
+    const count = typeof row.count === 'bigint' ? Number(row.count) : row.count;
 
     return {
       allowed: count <= limit,
       count,
       remaining: Math.max(0, limit - count),
-      resetAt: row.expires_at
+      resetAt: new Date(row.expires_at)
     };
   } catch (error) {
     console.error('[RATE_LIMIT_ERROR]', error);
 
-    // Fail closed.
+    // Fail closed
     throw new Error('Rate-limit service unavailable');
   }
 }

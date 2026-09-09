@@ -176,12 +176,30 @@ export const authConfig: NextAuthConfig = {
   },
 
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
 
         if (typeof user.sessionVersion === 'number') {
           token.sessionVersion = user.sessionVersion;
+        }
+        return token;
+      }
+
+      // Re-verify user active status & session version against DB
+      if (token.sub) {
+        const admin = await prisma.adminUser.findUnique({
+          where: { id: token.sub },
+          select: { isActive: true, sessionVersion: true }
+        });
+
+        if (
+          !admin ||
+          !admin.isActive ||
+          (typeof token.sessionVersion === 'number' &&
+            admin.sessionVersion !== token.sessionVersion)
+        ) {
+          return {};
         }
       }
 
@@ -189,7 +207,14 @@ export const authConfig: NextAuthConfig = {
     },
 
     async session({ session, token }) {
-      if (session.user && token.sub) {
+      if (!token.sub) {
+        return {
+          ...session,
+          user: undefined
+        };
+      }
+
+      if (session.user) {
         session.user.id = token.sub;
 
         if (typeof token.sessionVersion === 'number') {

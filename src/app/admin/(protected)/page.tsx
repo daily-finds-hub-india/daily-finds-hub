@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   AlertCircle,
   ArrowRight,
@@ -7,7 +8,8 @@ import {
   Package,
   Plus,
   Radio,
-  Sparkles
+  Sparkles,
+  Edit
 } from 'lucide-react';
 
 import { prisma } from '@/lib/prisma';
@@ -18,36 +20,39 @@ export default async function AdminPage() {
     categoryCount,
     publishedCount,
     featuredCount,
-    trendingCount
+    trendingCount,
+    recentProducts
   ] = await Promise.all([
     prisma.product.count(),
-
     prisma.category.count(),
-
     prisma.product.count({
-      where: {
-        isPublished: true
-      }
+      where: { isPublished: true }
     }),
-
     prisma.product.count({
-      where: {
-        isFeatured: true
-      }
+      where: { isFeatured: true }
     }),
-
     prisma.product.count({
-      where: {
-        isTrending: true
+      where: { isTrending: true }
+    }),
+    prisma.product.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        category: {
+          select: { name: true }
+        },
+        images: {
+          take: 1,
+          where: { isPrimary: true },
+          select: { url: true, altText: true }
+        }
       }
     })
   ]);
 
   const draftCount = Math.max(0, productCount - publishedCount);
-
   const publishedRatio =
     productCount > 0 ? Math.round((publishedCount / productCount) * 100) : 0;
-
   const spotlightCount = featuredCount + trendingCount;
 
   return (
@@ -60,7 +65,6 @@ export default async function AdminPage() {
           <div className="min-w-0">
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/30 bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent)] sm:px-3 sm:text-xs sm:tracking-wider">
               <Sparkles size={13} strokeWidth={2} aria-hidden="true" />
-
               <span>Store Performance</span>
             </div>
 
@@ -80,7 +84,6 @@ export default async function AdminPage() {
               className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-bold text-slate-950 transition-all duration-200 hover:bg-[var(--accent-hover)] hover:shadow-md hover:shadow-amber-500/20 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:w-auto"
             >
               <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
-
               <span>Add Product</span>
             </Link>
           </div>
@@ -140,7 +143,6 @@ export default async function AdminPage() {
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-xs sm:p-6 lg:p-7">
           <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent)] sm:text-xs sm:tracking-wider">
             <Sparkles size={14} strokeWidth={2} aria-hidden="true" />
-
             <span>Editorial Workflow</span>
           </div>
 
@@ -161,7 +163,6 @@ export default async function AdminPage() {
               className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[var(--border-strong)] bg-[var(--surface-muted)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:w-auto"
             >
               <Package size={15} strokeWidth={1.9} aria-hidden="true" />
-
               <span>Manage Products</span>
             </Link>
 
@@ -170,7 +171,6 @@ export default async function AdminPage() {
               className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[var(--border-strong)] bg-[var(--surface-muted)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition-colors duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:w-auto"
             >
               <FolderKanban size={15} strokeWidth={1.9} aria-hidden="true" />
-
               <span>Manage Categories</span>
             </Link>
           </div>
@@ -194,7 +194,6 @@ export default async function AdminPage() {
             </span>
           </div>
 
-          {/* Progress */}
           <div
             className="mt-5 h-2.5 w-full overflow-hidden rounded-full bg-[var(--border)]"
             role="progressbar"
@@ -217,7 +216,6 @@ export default async function AdminPage() {
               : `${publishedCount} of ${productCount} products are published and discoverable by visitors.`}
           </p>
 
-          {/* Status */}
           <div className="mt-6 border-t border-[var(--border)] pt-4">
             {draftCount > 0 ? (
               <div className="flex items-start gap-2.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
@@ -226,7 +224,6 @@ export default async function AdminPage() {
                   className="mt-0.5 shrink-0"
                   aria-hidden="true"
                 />
-
                 <span>
                   {draftCount} product
                   {draftCount === 1 ? '' : 's'} waiting in draft
@@ -239,19 +236,116 @@ export default async function AdminPage() {
                   className="mt-0.5 shrink-0"
                   aria-hidden="true"
                 />
-
                 <span>All products in the catalog are published.</span>
               </div>
             )}
           </div>
         </section>
       </section>
+
+      {/* =========================================================
+          RECENTLY ADDED PRODUCTS
+         ========================================================= */}
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-xs sm:p-6 lg:p-7">
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
+          <div>
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">
+              Recently Added Products
+            </h2>
+            <p className="text-xs text-[var(--text-secondary)]">
+              Latest items added to your catalog
+            </p>
+          </div>
+          <Link
+            href="/admin/products"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)] hover:underline"
+          >
+            <span>View All</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        {recentProducts.length === 0 ? (
+          <div className="py-8 text-center text-sm text-[var(--text-muted)]">
+            No products found. Click &quot;Add Product&quot; to create your
+            first item.
+          </div>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-[var(--border)] text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                  <th className="pb-3 pl-2">Product</th>
+                  <th className="pb-3">Category</th>
+                  <th className="pb-3">Price</th>
+                  <th className="pb-3">Status</th>
+                  <th className="pb-3 pr-2 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {recentProducts.map((p) => (
+                  <tr
+                    key={p.id}
+                    className="group hover:bg-[var(--surface-muted)]/50"
+                  >
+                    <td className="py-3 pl-2 font-medium text-[var(--text-primary)]">
+                      <div className="flex items-center gap-3">
+                        {p.images[0]?.url ? (
+                          <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-[var(--border)]">
+                            <Image
+                              src={p.images[0].url}
+                              alt={p.images[0].altText || p.name}
+                              fill
+                              sizes="36px"
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-muted)] text-[var(--text-muted)]">
+                            <Package size={16} />
+                          </div>
+                        )}
+                        <span className="truncate max-w-[200px]">{p.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 text-[var(--text-secondary)]">
+                      {p.category.name}
+                    </td>
+                    <td className="py-3 font-semibold text-[var(--text-primary)]">
+                      ₹{p.price.toString()}
+                    </td>
+                    <td className="py-3">
+                      {p.isPublished ? (
+                        <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                          Published
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                          Draft
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-2 text-right">
+                      <Link
+                        href={`/admin/products?edit=${p.id}`}
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--border)] p-1.5 text-xs text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                      >
+                        <Edit size={14} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
 
 /* =============================================================
-   METRIC CARD
+    METRIC CARD
    ============================================================= */
 
 interface MetricCardProps {

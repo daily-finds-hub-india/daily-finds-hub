@@ -188,6 +188,8 @@ export const updateProductSchema = z
 
 export const productIdSchema = cuidSchema;
 
+export const productImageIdSchema = cuidSchema;
+
 export const productQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).max(100_000).default(1),

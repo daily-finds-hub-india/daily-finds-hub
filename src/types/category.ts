@@ -1,13 +1,25 @@
+export interface CategoryImageItem {
+  id?: string;
+  url: string;
+  publicId: string;
+  altText: string;
+  isPrimary: boolean;
+  displayOrder?: number;
+}
+
 export interface Category {
   id: string;
   name: string;
   slug: string;
   description: string;
-  productCount: number;
-  imageUrl: string | null;
   isFeatured: boolean;
   isPublished: boolean;
+  productCount: number;
+  imageUrl: string | null;
+  imagePublicId: string | null;
+  images?: CategoryImageItem[];
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CategoryFormData {
