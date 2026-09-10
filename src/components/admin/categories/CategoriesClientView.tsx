@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { PAGE_SIZE } from '@/lib/constants/categoryConstants';
 import {
   Category,
   CategoryFormData,
@@ -45,7 +44,7 @@ export function CategoriesClientView({
     null
   );
   const [isLoading, setIsLoading] = useState(false);
-
+  const PAGE_SIZE = 8;
   const filteredCategories = useMemo(() => {
     return categories
       .filter((category) => {
@@ -132,8 +131,7 @@ export function CategoriesClientView({
             savedCategory.id,
             img.file,
             img.altText,
-            img.isPrimary,
-            i
+            img.isPrimary
           );
           finalImages.push({
             id: uploaded.id,

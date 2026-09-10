@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { PAGE_SIZE } from '@/lib/constants/productConstants';
 import {
   Product,
   ProductFormData,
@@ -27,9 +26,15 @@ import { ProductPagination } from '@/components/admin/products/ProductPagination
 import { ProductModal } from '@/components/admin/products/ProductModal';
 import { DeleteConfirmModal } from '@/components/admin/products/DeleteConfirmModal';
 
+interface MinimalCategory {
+  id: string;
+  name: string;
+  slug?: string;
+}
+
 interface ProductsClientViewProps {
   initialProducts: Product[];
-  categories: Array<{ id: string; name: string }>;
+  categories: MinimalCategory[];
 }
 
 export function ProductsClientView({
@@ -37,7 +42,7 @@ export function ProductsClientView({
   categories
 }: ProductsClientViewProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
-
+  const PAGE_SIZE = 8;
   // Filter & Search States
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
@@ -290,6 +295,7 @@ export function ProductsClientView({
           sortOption={sortOption}
           onSortChange={setSortOption}
           onAddProduct={handleOpenAddModal}
+          categories={categories}
         />
       </div>
 

@@ -10,7 +10,7 @@ interface CategoryCardProps {
 
 export function CategoryCard({ category }: CategoryCardProps) {
   const image =
-    category.images.find((item) => item.isPrimary) ?? category.images[0];
+    category.images?.find((item) => item.isPrimary) ?? category.images?.[0];
 
   return (
     <Link

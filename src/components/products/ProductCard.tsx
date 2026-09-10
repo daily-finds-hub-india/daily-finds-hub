@@ -10,7 +10,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const primaryImage =
-    product.images.find((image) => image.isPrimary) ?? product.images[0];
+    product.images?.find((image) => image.isPrimary) ?? product.images?.[0];
 
   const price =
     product.price !== null && product.price !== undefined

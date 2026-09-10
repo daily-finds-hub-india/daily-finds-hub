@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Edit2, Trash2, Sparkles, Flame, Star, Package } from 'lucide-react';
 import { Product } from '@/types/product';
 
@@ -21,12 +22,14 @@ export function ProductCardList({
           {/* Header Row */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text-muted)]">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--text-muted)]">
                 {product.imageUrl ? (
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product.name}
-                    className="h-full w-full rounded-xl object-cover"
+                    fill
+                    sizes="40px"
+                    className="object-cover"
                   />
                 ) : (
                   <Package size={18} />

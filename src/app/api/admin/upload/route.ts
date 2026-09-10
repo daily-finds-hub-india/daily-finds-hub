@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server';
 import { requireApiAdmin } from '@/lib/auth/require-api-admin';
 import { checkAdminApiRateLimit } from '@/lib/security/admin-api-rate-limit';
 import { validateSameOrigin } from '@/lib/security/csrf';

@@ -7,7 +7,6 @@ import {
   SpotlightFilter,
   SortOption
 } from '@/types/product';
-import { categories } from '@/lib/constants/productConstants';
 
 interface ProductToolbarProps {
   totalCount: number;
@@ -22,6 +21,7 @@ interface ProductToolbarProps {
   sortOption: SortOption;
   onSortChange: (sort: SortOption) => void;
   onAddProduct: () => void;
+  categories: Array<{ id: string; name: string }>;
 }
 
 export function ProductToolbar({
@@ -36,7 +36,8 @@ export function ProductToolbar({
   onSpotlightChange,
   sortOption,
   onSortChange,
-  onAddProduct
+  onAddProduct,
+  categories = []
 }: ProductToolbarProps) {
   return (
     <div className="flex flex-col gap-3 p-3.5 sm:p-4">
