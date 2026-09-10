@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { getPublicCategoriesList } from '@/lib/services/public-category';
 import { getPublicProductsList } from '@/lib/services/public-product';
 
 import { ProductsClientView } from '@/components/products/ProductsClientView';
@@ -20,15 +20,8 @@ export default async function ProductsPage({
 }: ProductsPageProps) {
   const params = await searchParams;
 
-  const categories = await prisma.category.findMany({
-    orderBy: {
-      name: 'asc'
-    },
-    select: {
-      id: true,
-      name: true
-    }
-  });
+  // Use domain service function instead of raw Prisma calls
+  const categories = await getPublicCategoriesList();
 
   const sortParam: SortType = VALID_SORTS.includes(params.sort as SortType)
     ? (params.sort as SortType)

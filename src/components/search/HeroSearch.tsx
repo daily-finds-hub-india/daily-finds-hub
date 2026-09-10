@@ -40,7 +40,6 @@ export function HeroSearch() {
   const handleSubmit = useCallback(
     (event: React.FormEvent) => {
       event.preventDefault();
-
       if (!normalizedQuery) return;
 
       setIsFocused(false);
@@ -65,21 +64,32 @@ export function HeroSearch() {
       }
     }
 
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsFocused(false);
+        inputRef.current?.blur();
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   return (
     <div ref={containerRef} className="relative w-full max-w-2xl">
-      {/* Search Form Container */}
+      {/* Hero Search Bar Form */}
       <form
         onSubmit={handleSubmit}
         action="/products"
         method="GET"
         className={cn(
           'relative flex min-h-14 w-full items-center bg-[var(--surface)] transition-all duration-200',
-          'overflow-hidden', // Fixes child elements overflowing rounded corners
-          'border border-[var(--border-strong)]',
+          'overflow-hidden border border-[var(--border-strong)]',
           isFocused && 'border-[var(--accent)]',
           isDropdownOpen
             ? 'rounded-t-2xl rounded-b-none border-b-transparent shadow-none'
@@ -98,7 +108,7 @@ export function HeroSearch() {
 
         <input
           ref={inputRef}
-          type="search"
+          type="text"
           name="search"
           value={query}
           onFocus={() => setIsFocused(true)}
@@ -108,8 +118,7 @@ export function HeroSearch() {
           autoComplete="off"
           className={cn(
             'min-h-14 w-full border-0 bg-transparent py-3.5 pl-11 pr-28 text-sm font-medium text-[var(--text-primary)] sm:pl-12 sm:pr-36 sm:text-base',
-            'outline-none focus:outline-none focus:ring-0 placeholder:text-[var(--text-muted)]',
-            '[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none' // Removes default browser 'x' icon
+            'outline-none focus:outline-none focus:ring-0 placeholder:text-[var(--text-muted)]'
           )}
         />
 
@@ -118,7 +127,7 @@ export function HeroSearch() {
             <button
               type="button"
               onClick={handleClear}
-              aria-label="Clear search"
+              aria-label="Clear search query"
               className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
             >
               <X size={15} strokeWidth={2} aria-hidden="true" />
@@ -134,7 +143,7 @@ export function HeroSearch() {
         </div>
       </form>
 
-      {/* Seamless Recommendations Container */}
+      {/* Hero Dropdown Results */}
       <AnimatePresence>
         {isDropdownOpen && (
           <motion.div

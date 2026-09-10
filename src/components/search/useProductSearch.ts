@@ -6,18 +6,22 @@ export type SearchProduct = {
   id: string;
   name: string;
   slug: string;
-  shortDescription: string;
+  price?: number;
+  shortDescription?: string;
+  categoryName?: string;
+  imageUrl?: string | null;
 };
 
 export type SearchCategory = {
   id: string;
   name: string;
   slug: string;
-  description: string;
+  description?: string;
 };
 
 interface SearchResponse {
-  success: boolean;
+  success?: boolean;
+  results?: SearchProduct[];
   products?: SearchProduct[];
   categories?: SearchCategory[];
   message?: string;
@@ -51,7 +55,6 @@ const emptyResults: SearchResults = {
 export function useProductSearch(): UseProductSearchResult {
   const [query, setQueryState] = useState('');
   const [results, setResults] = useState<SearchResults>(emptyResults);
-
   const [isLoading, setIsLoading] = useState(false);
 
   const timeoutRef = useRef<number | null>(null);
@@ -84,7 +87,6 @@ export function useProductSearch(): UseProductSearchResult {
         timeoutRef.current = null;
 
         const controller = new AbortController();
-
         controllerRef.current = controller;
 
         try {
@@ -97,14 +99,24 @@ export function useProductSearch(): UseProductSearchResult {
 
           const data: SearchResponse = await response.json();
 
-          if (!response.ok || !data.success) {
+          if (!response.ok || data.success === false) {
             throw new Error(data.message || 'Failed to search products.');
           }
 
+          const parsedProducts = Array.isArray(data.results)
+            ? data.results
+            : Array.isArray(data.products)
+              ? data.products
+              : [];
+
+          const parsedCategories = Array.isArray(data.categories)
+            ? data.categories
+            : [];
+
           setResults({
             query: searchQuery,
-            products: Array.isArray(data.products) ? data.products : [],
-            categories: Array.isArray(data.categories) ? data.categories : [],
+            products: parsedProducts,
+            categories: parsedCategories,
             error: null
           });
         } catch (error) {
@@ -140,10 +152,8 @@ export function useProductSearch(): UseProductSearchResult {
 
       if (!nextQuery) {
         cancelPendingSearch();
-
         setResults(emptyResults);
         setIsLoading(false);
-
         return;
       }
 
@@ -172,15 +182,10 @@ export function useProductSearch(): UseProductSearchResult {
     query,
     setQuery,
     normalizedQuery,
-
     products: hasMatchingResults ? results.products : [],
-
     categories: hasMatchingResults ? results.categories : [],
-
     isLoading: normalizedQuery !== '' && isLoading,
-
     error: hasMatchingResults ? results.error : null,
-
     clearSearch
   };
 }

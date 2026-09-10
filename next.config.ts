@@ -37,7 +37,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['172.16.140.69', '10.64.217.70', '192.168.1.33'],
+  allowedDevOrigins: [
+    '172.16.140.69',
+    '10.64.217.70',
+    '192.168.1.33',
+    '10.11.222.125'
+  ],
 
   images: {
     remotePatterns: [

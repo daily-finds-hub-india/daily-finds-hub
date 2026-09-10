@@ -329,25 +329,6 @@ img {
 }
 
 /* =========================================================
-   Focus
-   ========================================================= */
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-/*
- * Don't add custom outlines to elements that already provide
- * a stronger, component-specific focus treatment.
- */
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline-offset: 1px;
-}
-
-/* =========================================================
    Scrollbars
    ========================================================= */
 
