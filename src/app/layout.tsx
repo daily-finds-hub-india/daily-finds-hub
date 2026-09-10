@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     'Discover useful gadgets, clever home products, kitchen finds, tech, travel essentials, and interesting products worth knowing about.',
   applicationName: 'Daily Finds Hub',
   referrer: 'origin-when-cross-origin',
+  icons: {
+    icon: '/icon.svg'
+  },
   robots: {
     index: true,
     follow: true

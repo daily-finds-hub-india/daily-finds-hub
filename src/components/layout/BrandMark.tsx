@@ -19,7 +19,7 @@ export function BrandMark({ compact = false, className }: BrandMarkProps) {
       aria-label="Daily Finds Hub home"
     >
       <Image
-        src="/images/brand/Logo-with-BG.png"
+        src="/images/brand/Logo-2.svg"
         alt="Daily Finds Hub"
         width={45}
         height={45}

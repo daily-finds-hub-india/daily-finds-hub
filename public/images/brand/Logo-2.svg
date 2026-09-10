@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Vibrant Emerald-to-Teal Gradient for Universal Contrast -->
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="50%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+
+    <!-- Subtle Drop Shadow to lift icon on white backgrounds -->
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0F172A" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Container Base: Dark Slate Circle that works seamlessly on white, dark, or social feeds -->
+  <rect width="512" height="512" rx="256" fill="#0F172A" />
+
+  <!-- Outer Glowing Discovery Ring -->
+  <circle 
+    cx="256" 
+    cy="256" 
+    r="160" 
+    stroke="url(#brandGrad)" 
+    stroke-width="28" 
+    stroke-linecap="round" 
+    stroke-dasharray="700 80"
+    filter="url(#softShadow)"
+  />
+
+  <!-- Central Starburst / Compass (Symbolizing "Daily Discoveries") -->
+  <!-- Main Vertical & Horizontal Rays -->
+  <path 
+    d="M 256 128 L 256 384 M 128 256 L 384 256" 
+    stroke="url(#brandGrad)" 
+    stroke-width="24" 
+    stroke-linecap="round" 
+  />
+
+  <!-- Diagonal Rays -->
+  <path 
+    d="M 176 176 L 336 336 M 336 176 L 176 336" 
+    stroke="url(#brandGrad)" 
+    stroke-width="16" 
+    stroke-linecap="round" 
+    opacity="0.85"
+  />
+
+  <!-- Core Center Spark Dot -->
+  <circle cx="256" cy="256" r="28" fill="#F8FAFC" />
+</svg>
