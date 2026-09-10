@@ -1,7 +1,5 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-
 import { Select } from '@/components/ui/Select';
 
 type Category = {
@@ -11,6 +9,10 @@ type Category = {
 
 interface ProductFiltersProps {
   categories: Category[];
+  activeCategory: string;
+  activeSort: string;
+  onFilterChange: (key: 'category' | 'sort', value: string) => void;
+  disabled?: boolean;
 }
 
 const sortOptions = [
@@ -24,38 +26,47 @@ const sortOptions = [
   { value: 'reviews', label: 'Most reviewed' }
 ];
 
-export function ProductFilters({ categories }: ProductFiltersProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const activeCategory = searchParams.get('category') ?? 'all';
-
-  const activeSort = searchParams.get('sort') ?? 'featured';
-
-  const filterCategories = [{ id: 'all', name: 'All' }, ...categories];
-
-  function updateFilter(key: 'category' | 'sort', value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (value === 'all' || value === 'featured') {
-      params.delete(key);
-    } else {
-      params.set(key, value);
-    }
-
-    const query = params.toString();
-
-    router.push(query ? `/products?${query}` : '/products', {
-      scroll: false
-    });
-  }
+export function ProductFilters({
+  categories,
+  activeCategory,
+  activeSort,
+  onFilterChange,
+  disabled = false
+}: ProductFiltersProps) {
+  const filterCategories = [
+    {
+      id: 'all',
+      name: 'All'
+    },
+    ...categories
+  ];
 
   return (
     <div className="mb-12 border-y border-[var(--border)] py-4 sm:py-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        {/* Category filters */}
+      <div
+        className="
+          flex
+          flex-col
+          gap-4
+          lg:flex-row
+          lg:items-center
+          lg:justify-between
+        "
+      >
         <div
-          className="themed-scrollbar -mx-1 flex min-w-0 gap-2 overflow-x-auto px-1 pb-1 lg:mx-0 lg:px-0 lg:pb-0"
+          className="
+            themed-scrollbar
+            -mx-1
+            flex
+            min-w-0
+            gap-2
+            overflow-x-auto
+            px-1
+            pb-1
+            lg:mx-0
+            lg:px-0
+            lg:pb-0
+          "
           role="group"
           aria-label="Filter by category"
         >
@@ -66,11 +77,13 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
               <button
                 key={category.id}
                 type="button"
-                onClick={() => updateFilter('category', category.id)}
+                disabled={disabled}
+                onClick={() => onFilterChange('category', category.id)}
                 aria-pressed={isActive}
                 className={[
                   'min-h-10 shrink-0 rounded-full border px-4 py-2 text-xs font-semibold shadow-xs transition-colors duration-200',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]',
+                  disabled ? 'cursor-wait opacity-60' : '',
                   isActive
                     ? 'border-[var(--accent)] bg-[var(--accent-soft)] font-bold text-[var(--accent-text)]'
                     : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)]'
@@ -82,15 +95,16 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
           })}
         </div>
 
-        {/* Sort */}
         <div className="flex w-full shrink-0 items-center lg:w-auto">
-          <Select
-            label="Sort"
-            value={activeSort}
-            options={sortOptions}
-            align="left"
-            onChange={(value) => updateFilter('sort', value)}
-          />
+          <div className={disabled ? 'pointer-events-none opacity-60' : ''}>
+            <Select
+              label="Sort"
+              value={activeSort}
+              options={sortOptions}
+              align="left"
+              onChange={(value) => onFilterChange('sort', value)}
+            />
+          </div>
         </div>
       </div>
     </div>

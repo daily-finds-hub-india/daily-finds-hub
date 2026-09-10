@@ -1,10 +1,7 @@
-import { Container } from '@/components/layout/Container';
-import { ProductFilters } from '@/components/products/ProductFilters';
-import { ProductGrid } from '@/components/products/ProductGrid';
-import { Section } from '@/components/ui/Section';
-import { SectionHeading } from '@/components/ui/SectionHeading';
 import { prisma } from '@/lib/prisma';
 import { getPublicProductsList } from '@/lib/services/public-product';
+
+import { ProductsClientView } from '@/components/products/ProductsClientView';
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -15,6 +12,7 @@ interface ProductsPageProps {
 }
 
 const VALID_SORTS = ['newest', 'oldest', 'name', 'price', 'rating'] as const;
+
 type SortType = (typeof VALID_SORTS)[number];
 
 export default async function ProductsPage({
@@ -63,21 +61,13 @@ export default async function ProductsPage({
       : 'No published products are available yet.';
 
   return (
-    <main>
-      <Section>
-        <Container>
-          <SectionHeading
-            eyebrow={searchEyebrow}
-            title={searchHeading}
-            description={description}
-          />
-
-          <div className="mt-8">
-            <ProductFilters categories={categories} />
-            <ProductGrid products={products} emptyMessage={emptyMessage} />
-          </div>
-        </Container>
-      </Section>
-    </main>
+    <ProductsClientView
+      categories={categories}
+      products={products}
+      searchHeading={searchHeading}
+      searchEyebrow={searchEyebrow}
+      description={description}
+      emptyMessage={emptyMessage}
+    />
   );
 }
